@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Special Coffee Wiki — 디자인 목업 v0.2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ═══════════════ 디자인 토큰 ═══════════════ */
+:root{
+  --paper:#FFFFFF; --surface:#FAFAFA;
+  --line:#E3E3E3; --line-strong:#C7C7C7;
+  --ink:#0A0A0A; --ink-2:#3D3D3D; --ink-3:#6B6B6B; --ink-4:#9A9A9A;
+  --accent:#0F766E; --accent-weak:#E6F2F1;
+  --danger:#B42318; --warn:#B54708;
+
+  --f-display:64px; --f-metric:40px; --f-metric-sm:26px;
+  --f-title:20px; --f-subtitle:16px; --f-body:15px;
+  --f-label:13px; --f-caption:11px;
+
+  --fl-fruity:#C0392B; --fl-sour:#D4A017; --fl-green:#4B8B3B;
+  --fl-other:#7F8C8D; --fl-roasted:#8B4513; --fl-spices:#B7472A;
+  --fl-nutty:#A0714F; --fl-sweet:#E0A458; --fl-floral:#B565A7;
+}
+[data-theme="dark"]{
+  --paper:#0C0D0D; --surface:#161818;
+  --line:#2A2D2D; --line-strong:#3D4140;
+  --ink:#F5F5F5; --ink-2:#C9CCCB; --ink-3:#8B908F; --ink-4:#5E6362;
+  --accent:#2DD4BF; --accent-weak:#12312E;
+  --danger:#F97066; --warn:#F79009;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-feature-settings:'tnum' 1;
+  background:#8A8A8A; color:var(--ink);
+  display:flex; flex-direction:column; align-items:center;
+  min-height:100vh; padding:20px 12px 60px;
+}
+[data-theme="dark"] body{background:#000}
+
+/* ── 다국어 타이포 규칙 (디자인 기획서 8절) ── */
+:lang(ko){word-break:keep-all;overflow-wrap:break-word}
+:lang(en){word-break:normal;overflow-wrap:break-word}
+:lang(en) .timer,:lang(en) .tgt,:lang(en) .rc-s,:lang(en) .mc .v,
+:lang(en) .bean .sc,:lang(en) .log .s,:lang(en) .fl-cnt .n{letter-spacing:-.02em}
+:lang(en) .log .d{width:54px}          /* Aug 14 는 8/14 보다 넓다 */
+:lang(en) .brew-btm .btn.sec{flex:0 0 132px}
+
+/* ═══════════════ 목업 컨트롤 (실제 사이트 아님) ═══════════════ */
+.ctl{width:100%;max-width:900px;margin-bottom:20px;font-size:12px;color:#fff}
+.ctl h1{font-size:14px;font-weight:600;margin-bottom:3px}
+.ctl p{opacity:.65;margin-bottom:12px;line-height:1.5}
+.ctl-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.ctl button{
+  font:inherit;font-size:12px;font-weight:500;padding:7px 13px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:#fff;cursor:pointer;transition:.12s
+}
+.ctl button:hover{background:rgba(255,255,255,.18)}
+.ctl button.on{background:#fff;color:#111;border-color:#fff;font-weight:600}
+.ctl .sep{width:1px;height:22px;background:rgba(255,255,255,.25);margin:0 4px}
+
+/* ═══════════════ 폰 프레임 ═══════════════ */
+.phone{
+  width:390px; height:820px; background:var(--paper);
+  border-radius:26px; overflow:hidden; position:relative;
+  box-shadow:0 18px 50px rgba(0,0,0,.4);
+  display:flex; flex-direction:column; transition:width .2s
+}
+.phone.wide{width:820px}
+@media(max-width:430px){ .phone{width:100%;height:88vh;border-radius:18px} }
+
+.scr{display:none;flex-direction:column;height:100%;overflow:hidden}
+.scr.on{display:flex}
+.body{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.body::-webkit-scrollbar{width:0}
+
+/* ═══════════════ 공통 ═══════════════ */
+.pad{padding:0 20px}
+.nav{height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--line);flex-shrink:0;gap:8px}
+.nav-t{font-size:var(--f-subtitle);font-weight:600;letter-spacing:-.01em}
+.nav-a{font-size:var(--f-label);font-weight:500;color:var(--ink-3);
+  background:none;border:none;font-family:inherit;cursor:pointer;padding:8px;white-space:nowrap}
+
+.cap{font-size:var(--f-caption);font-weight:600;letter-spacing:.06em;
+  color:var(--ink-3);text-transform:uppercase}
+.ttl{font-size:var(--f-title);font-weight:600;letter-spacing:-.01em;line-height:1.35}
+.bod{font-size:var(--f-body);line-height:1.65;color:var(--ink-2)}
+.dim{font-size:var(--f-label);color:var(--ink-3);line-height:1.55}
+
+.h8{height:8px}.h12{height:12px}.h16{height:16px}.h20{height:20px}
+.h24{height:24px}.h32{height:32px}
+
+.btn{width:100%;height:52px;border-radius:8px;border:none;font-family:inherit;
+  font-size:var(--f-body);font-weight:600;cursor:pointer;
+  background:var(--accent);color:var(--paper);transition:.12s;padding:0 14px}
+.btn:active{transform:scale(.985)}
+.btn.sec{background:transparent;border:1px solid var(--line-strong);color:var(--ink)}
+
+/* 언어 세그먼트 토글 (앱 내부) */
+.langseg{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden}
+.langseg button{
+  min-width:52px;height:32px;border:none;background:transparent;font-family:inherit;
+  font-size:12px;font-weight:600;color:var(--ink-3);cursor:pointer;padding:0 10px
+}
+.langseg button.on{background:var(--accent);color:var(--paper)}
+
+/* MetricCard */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--paper)}
+.mc .v{font-size:var(--f-metric-sm);font-weight:600;letter-spacing:-.01em;margin-top:5px;
+  display:flex;align-items:baseline;gap:4px}
+.mc .v small{font-size:15px;font-weight:500;color:var(--ink-2)}
+
+/* Chip */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--line-strong);
+  background:transparent;color:var(--ink-2);font-family:inherit;font-size:var(--f-label);
+  font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  transition:.12s;white-space:nowrap}
+.chip.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent);font-weight:600}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* 하단 탭 */
+.tabs{height:56px;display:flex;border-top:1px solid var(--line);flex-shrink:0;background:var(--paper)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border:none;background:none;font-family:inherit;cursor:pointer;color:var(--ink-3)}
+.tab .ic{font-size:19px;line-height:1}
+.tab .lb{font-size:var(--f-caption);font-weight:500}
+.tab.on{color:var(--accent)} .tab.on .lb{font-weight:600}
+
+/* 온보딩 */
+.ob-step{display:flex;gap:5px;margin-bottom:22px}
+.ob-step i{height:3px;flex:1;background:var(--line);border-radius:2px}
+.ob-step i.on{background:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.gear{border:1px solid var(--line);border-radius:8px;padding:15px;background:var(--paper);
+  cursor:pointer;text-align:left;font-family:inherit;transition:.12s}
+.gear.on{border-color:var(--accent);border-width:2px;padding:14px;background:var(--accent-weak)}
+.gear .n{font-size:14px;font-weight:600;line-height:1.35;color:var(--ink)}
+.gear .m{font-size:var(--f-caption);color:var(--ink-3);margin-top:5px;line-height:1.45}
+.gear .tag{display:inline-block;margin-top:8px;font-size:10px;font-weight:600;letter-spacing:.04em;
+  padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--ink-3);border:1px solid var(--line)}
+.gear.on .tag{background:var(--paper);border-color:var(--accent);color:var(--accent)}
+
+/* 추천 */
+.rc{border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:12px;background:var(--paper)}
+.rc.top{border-color:var(--accent);border-width:2px;padding:17px}
+.rc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.rc-s{font-size:var(--f-metric);font-weight:600;letter-spacing:-.02em;line-height:1;
+  display:flex;align-items:baseline;gap:2px}
+.rc-s small{font-size:14px;font-weight:500;color:var(--ink-3)}
+.rc-n{font-size:var(--f-subtitle);font-weight:600;line-height:1.4;flex:1}
+.rc-meta{font-size:var(--f-caption);color:var(--ink-3);margin-top:4px;font-weight:500}
+.barT{height:6px;background:var(--accent-weak);border-radius:3px;overflow:hidden;margin:14px 0 16px}
+.barF{height:100%;background:var(--accent);border-radius:3px}
+.reason{display:flex;gap:8px;font-size:var(--f-label);line-height:1.5;margin-bottom:7px;color:var(--ink-2)}
+.reason .k{flex-shrink:0;font-weight:700;width:13px}
+.reason.ok .k{color:var(--accent)}
+.reason.no .k{color:var(--warn)}
+.conv{background:var(--surface);border-radius:6px;padding:13px 15px;margin:15px 0}
+.conv-t{font-size:var(--f-caption);font-weight:600;letter-spacing:.06em;
+  color:var(--ink-3);text-transform:uppercase;margin-bottom:9px}
+.conv-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  font-size:var(--f-label);padding:4px 0}
+.conv-r .l{color:var(--ink-3)}
+.conv-r .r{font-weight:600;color:var(--ink);text-align:right}
+.conv-r .r s{font-weight:400;color:var(--ink-4);margin-right:6px}
+
+/* 추출 가이드 */
+.brew{background:var(--paper);height:100%;display:flex;flex-direction:column}
+.brew-top{height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;flex-shrink:0;gap:8px}
+.brew-top button{background:none;border:none;font-family:inherit;font-size:var(--f-label);
+  color:var(--ink-3);cursor:pointer;font-weight:500;padding:8px;white-space:nowrap}
+.memo{margin:0 20px;background:var(--surface);border-radius:6px;padding:11px 14px;flex-shrink:0}
+.memo .t{font-size:var(--f-label);color:var(--ink-2);line-height:1.45;margin-top:3px}
+.brew-mid{flex:1;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;padding:0 20px;text-align:center}
+.timer{font-size:var(--f-display);font-weight:600;letter-spacing:-.03em;line-height:1;transition:color .2s}
+.timer.alert{color:var(--accent)}
+.prog{width:100%;max-width:280px;margin:22px 0 6px}
+.prog-t{height:6px;background:var(--accent-weak);border-radius:3px;overflow:hidden}
+.prog-f{height:100%;background:var(--accent);border-radius:3px;transition:width .3s linear}
+.prog-l{font-size:var(--f-caption);font-weight:600;letter-spacing:.06em;color:var(--ink-3);margin-top:7px}
+.brew-div{width:100%;max-width:280px;height:1px;background:var(--line);margin:26px 0}
+.stp{font-size:var(--f-subtitle);font-weight:600;color:var(--accent);letter-spacing:-.005em}
+.tgt{font-size:var(--f-metric);font-weight:600;letter-spacing:-.02em;margin-top:14px;
+  display:flex;align-items:baseline;gap:5px;justify-content:center}
+.tgt small{font-size:19px;font-weight:500;color:var(--ink-2)}
+.how{font-size:var(--f-body);color:var(--ink-3);margin-top:12px}
+.nxt{font-size:var(--f-caption);font-weight:600;letter-spacing:.06em;color:var(--ink-3);margin-top:26px}
+.brew-btm{display:flex;gap:9px;padding:12px 20px 22px;flex-shrink:0;border-top:1px solid var(--line)}
+.brew-btm .btn{flex:1}
+.brew-btm .btn.sec{flex:0 0 120px}
+
+/* 테이스팅 */
+.rate{display:flex;gap:7px;margin-top:11px}
+.rate button{flex:1;height:46px;border-radius:6px;border:1px solid var(--line-strong);
+  background:transparent;font-family:inherit;font-size:var(--f-subtitle);font-weight:600;
+  color:var(--ink-3);cursor:pointer;transition:.12s}
+.rate button.on{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.inp{width:100%;border:1px solid var(--line-strong);border-radius:8px;padding:14px;
+  font-family:inherit;font-size:var(--f-body);background:transparent;color:var(--ink);
+  resize:none;line-height:1.55}
+.inp::placeholder{color:var(--ink-4)}
+.inp:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.fold{border-top:1px solid var(--line);padding:16px 0;margin-top:8px}
+.fold-h{display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px}
+.fold-h .t{font-size:var(--f-label);font-weight:600;color:var(--ink-2)}
+.fold-h .c{font-size:var(--f-label);color:var(--ink-4);white-space:nowrap}
+
+/* 플레이버 */
+.wheel{display:flex;justify-content:center;padding:4px 0 18px}
+.fl-cnt{background:var(--surface);border-radius:8px;padding:13px 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fl-cnt .n{font-size:var(--f-metric-sm);font-weight:600;letter-spacing:-.01em}
+.bean{border:1px solid var(--line);border-radius:8px;padding:15px;margin-bottom:9px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:var(--paper)}
+.bean .n{font-size:var(--f-body);font-weight:600;line-height:1.4}
+.bean .m{font-size:var(--f-caption);color:var(--ink-3);margin-top:4px;line-height:1.5}
+.bean .tags{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.mini{font-size:10px;font-weight:600;padding:3px 7px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink-2);
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.bean .sc{font-size:var(--f-metric-sm);font-weight:600;letter-spacing:-.01em;flex-shrink:0}
+
+/* 로그 */
+.log{border-bottom:1px solid var(--line);padding:16px 0;display:flex;gap:14px;align-items:flex-start}
+.log .d{font-size:var(--f-caption);font-weight:600;color:var(--ink-3);
+  width:36px;flex-shrink:0;padding-top:3px;line-height:1.35}
+.log .c{flex:1;min-width:0}
+.log .n{font-size:var(--f-body);font-weight:600;line-height:1.4}
+.log .p{font-size:var(--f-caption);color:var(--ink-3);margin-top:4px}
+.log .diff{display:flex;gap:11px;margin-top:8px;font-size:var(--f-caption);font-weight:600;flex-wrap:wrap}
+.log .diff span{color:var(--accent)}
+.log .s{font-size:var(--f-metric-sm);font-weight:600;letter-spacing:-.01em;flex-shrink:0}
+
+/* 폴백 배지 (미번역 해설) */
+.fallback{background:var(--surface);border-left:2px solid var(--line-strong);
+  padding:12px 14px;border-radius:0 6px 6px 0}
+.fallback .b{font-size:var(--f-caption);font-weight:600;color:var(--ink-3);
+  display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.fallback .x{font-size:var(--f-label);color:var(--ink-2);line-height:1.6}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="ctl">
+  <h1>Special Coffee Wiki — 디자인 목업 v0.2</h1>
+  <p>계측기 톤 · 무채색 + 포인트 1색(teal) · 모바일 퍼스트 · 한/영 다국어. 회색 영역은 목업 조작부이고 실제 사이트가 아닙니다.</p>
+  <div class="ctl-row" id="navScr"></div>
+  <div class="ctl-row">
+    <button onclick="setLang('ko')" id="bKo" class="on">한국어</button>
+    <button onclick="setLang('en')" id="bEn">English</button>
+    <div class="sep"></div>
+    <button onclick="theme()" id="btnTheme">🌙 다크</button>
+    <button onclick="wide()" id="btnWide">🖥 넓은 화면</button>
+    <div class="sep"></div>
+    <button onclick="startBrew()">▶ 추출 타이머 실행</button>
+  </div>
+</div>
+
+<div class="phone" id="phone">
+
+<!-- ═══ 1. 온보딩 ═══ -->
+<section class="scr on" data-s="ob">
+  <div class="nav">
+    <span class="nav-t" data-k="ob.nav"></span>
+    <button class="nav-a" data-k="ob.skip"></button>
+  </div>
+  <div class="body">
+    <div class="pad">
+      <div class="h20"></div>
+      <div class="ob-step"><i class="on"></i><i></i><i></i></div>
+      <div class="ttl" data-k="ob.q1"></div>
+      <div class="h8"></div>
+      <div class="dim" data-k="ob.q1sub"></div>
+      <div class="h24"></div>
+
+      <div class="grid2">
+        <button class="gear on"><div class="n">Hario V60 02</div><div class="m" data-k="g.v60p"></div><div class="tag" data-k="t.fast"></div></button>
+        <button class="gear"><div class="n">Hario V60 02</div><div class="m" data-k="g.v60c"></div><div class="tag" data-k="t.preheat"></div></button>
+        <button class="gear"><div class="n">Kalita Wave 185</div><div class="m" data-k="g.kalita"></div><div class="tag" data-k="t.forgiving"></div></button>
+        <button class="gear"><div class="n">Origami M</div><div class="m" data-k="g.origami"></div><div class="tag" data-k="t.swapfilter"></div></button>
+        <button class="gear"><div class="n">Hario Switch 03</div><div class="m" data-k="g.switch"></div><div class="tag" data-k="t.repeat"></div></button>
+        <button class="gear"><div class="n">Melitta 1x2</div><div class="m" data-k="g.melitta"></div><div class="tag" data-k="t.slow"></div></button>
+      </div>
+
+      <div class="h16"></div>
+      <button class="btn sec" data-k="ob.all"></button>
+      <div class="h24"></div>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:22px"><button class="btn" data-k="ob.next"></button></div>
+</section>
+
+<!-- ═══ 2. 추천 결과 ═══ -->
+<section class="scr" data-s="rec">
+  <div class="nav">
+    <button class="nav-a" data-k="rec.back"></button>
+    <span class="nav-t" data-k="rec.nav"></span>
+    <button class="nav-a" data-k="rec.sort"></button>
+  </div>
+  <div class="body">
+    <div class="pad">
+      <div class="h16"></div>
+      <div class="dim"><span data-k="rec.cond1"></span><br><span data-k="rec.cond2"></span></div>
+      <div class="h20"></div>
+
+      <div class="rc top">
+        <div class="rc-h">
+          <div>
+            <div class="rc-n">2025 WBrC — George Peng</div>
+            <div class="rc-meta" data-k="rec.meta1"></div>
+          </div>
+          <div class="rc-s">87<small data-k="u.pt"></small></div>
+        </div>
+        <div class="barT"><div class="barF" style="width:87%"></div></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r1"></span></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r2"></span></div>
+        <div class="reason no"><span class="k">△</span><span data-k="rec.r3"></span></div>
+        <div class="reason no"><span class="k">△</span><span data-k="rec.r4"></span></div>
+        <div class="conv">
+          <div class="conv-t" data-k="rec.convT"></div>
+          <div class="conv-r"><span class="l" data-k="l.grind"></span><span class="r"><s>−1 <span data-k="u.band"></span></s>18 <span data-k="u.click"></span></span></div>
+          <div class="conv-r"><span class="l" data-k="l.temp"></span><span class="r"><s>96 °C</s>94 °C</span></div>
+          <div class="conv-r"><span class="l" data-k="l.interval"></span><span class="r"><s>20 <span data-k="u.sec"></span></s>15 <span data-k="u.sec"></span></span></div>
+          <div class="conv-r"><span class="l" data-k="l.ratio"></span><span class="r">1:16 · 15 g / 240 g</span></div>
+        </div>
+        <button class="btn" data-k="rec.start" onclick="startBrew()"></button>
+      </div>
+
+      <div class="rc">
+        <div class="rc-h">
+          <div>
+            <div class="rc-n">Hoffmann V60 <span data-k="rec.h2pour"></span></div>
+            <div class="rc-meta" data-k="rec.meta2"></div>
+          </div>
+          <div class="rc-s">81<small data-k="u.pt"></small></div>
+        </div>
+        <div class="barT"><div class="barF" style="width:81%"></div></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r5"></span></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r6"></span></div>
+        <div class="reason no"><span class="k">△</span><span data-k="rec.r7"></span></div>
+      </div>
+
+      <div class="rc">
+        <div class="rc-h">
+          <div>
+            <div class="rc-n">Tetsu Kasuya 4:6</div>
+            <div class="rc-meta" data-k="rec.meta3"></div>
+          </div>
+          <div class="rc-s">76<small data-k="u.pt"></small></div>
+        </div>
+        <div class="barT"><div class="barF" style="width:76%"></div></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r8"></span></div>
+        <div class="reason ok"><span class="k">✓</span><span data-k="rec.r9"></span></div>
+      </div>
+      <div class="h24"></div>
+    </div>
+  </div>
+  <div class="tabs" data-tabs></div>
+</section>
+
+<!-- ═══ 3. 추출 가이드 ═══ -->
+<section class="scr" data-s="brew">
+  <div class="brew">
+    <div class="brew-top">
+      <button data-k="brew.exit"></button>
+      <button data-k="brew.keep"></button>
+    </div>
+    <div class="memo">
+      <div class="cap" data-k="brew.lastNote"></div>
+      <div class="t" data-k="brew.lastNoteBody"></div>
+    </div>
+    <div class="brew-mid">
+      <div class="timer" id="tm">0:00</div>
+      <div class="prog">
+        <div class="prog-t"><div class="prog-f" id="pf" style="width:0%"></div></div>
+        <div class="prog-l" id="pl"></div>
+      </div>
+      <div class="brew-div"></div>
+      <div class="stp" id="stp"></div>
+      <div class="tgt"><span id="tgt">45</span><small>g</small></div>
+      <div class="how" id="how"></div>
+      <div class="nxt" id="nxt"></div>
+    </div>
+    <div class="brew-btm">
+      <button class="btn sec" id="pz" onclick="toggleBrew()"></button>
+      <button class="btn" data-k="brew.next" onclick="nextStep()"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4. 테이스팅 ═══ -->
+<section class="scr" data-s="tas">
+  <div class="nav">
+    <span class="nav-t" data-k="tas.nav"></span>
+    <button class="nav-a" data-k="tas.skip"></button>
+  </div>
+  <div class="body">
+    <div class="pad">
+      <div class="h20"></div>
+      <div class="ttl" data-k="tas.q"></div>
+      <div class="h8"></div>
+      <div class="dim" data-k="tas.sub"></div>
+      <div class="h32"></div>
+
+      <div class="cap" data-k="tas.overall"></div>
+      <div class="rate">
+        <button>1</button><button>2</button><button>3</button>
+        <button class="on">4</button><button>5</button>
+      </div>
+
+      <div class="h32"></div>
+      <div class="cap" data-k="tas.flavor"></div>
+      <div class="h12"></div>
+      <div class="chips">
+        <button class="chip on"><i class="dot" style="background:var(--fl-floral)"></i><span data-k="f.jasmine"></span></button>
+        <button class="chip on"><i class="dot" style="background:var(--fl-fruity)"></i><span data-k="f.blueberry"></span></button>
+        <button class="chip"><i class="dot" style="background:var(--fl-sweet)"></i><span data-k="f.brownsugar"></span></button>
+        <button class="chip"><i class="dot" style="background:var(--fl-nutty)"></i><span data-k="f.almond"></span></button>
+        <button class="chip"><i class="dot" style="background:var(--fl-sour)"></i><span data-k="f.winey"></span></button>
+        <button class="chip"><i class="dot" style="background:var(--fl-roasted)"></i><span data-k="f.burnt"></span></button>
+        <button class="chip" data-k="tas.more"></button>
+      </div>
+
+      <div class="h32"></div>
+      <div class="cap" data-k="tas.next"></div>
+      <div class="h12"></div>
+      <textarea class="inp" rows="2" id="tasInp"></textarea>
+
+      <div class="h24"></div>
+      <div class="fold">
+        <div class="fold-h"><span class="t" data-k="tas.detail"></span><span class="c" data-k="tas.optional"></span></div>
+      </div>
+      <div class="h16"></div>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:22px"><button class="btn" data-k="tas.save"></button></div>
+</section>
+
+<!-- ═══ 5. 플레이버 ═══ -->
+<section class="scr" data-s="fl">
+  <div class="nav">
+    <span class="nav-t" data-k="fl.nav"></span>
+    <button class="nav-a">AND / <b style="color:var(--accent)">OR</b></button>
+  </div>
+  <div class="body">
+    <div class="pad">
+      <div class="h12"></div>
+      <div class="wheel">
+        <svg width="252" height="252" viewBox="0 0 252 252" role="img" aria-label="Coffee flavor wheel, 9 top categories">
+          <g id="wg"></g>
+          <circle cx="126" cy="126" r="34" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="126" y="120" text-anchor="middle" font-size="9.5" font-weight="600"
+                letter-spacing=".06em" fill="var(--ink-3)" id="wlbl">선택</text>
+          <text x="126" y="137" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink)">2</text>
+        </svg>
+      </div>
+
+      <div class="chips">
+        <button class="chip on"><i class="dot" style="background:var(--fl-floral)"></i>Floral</button>
+        <button class="chip on"><i class="dot" style="background:var(--fl-fruity)"></i>Fruity</button>
+      </div>
+
+      <div class="h20"></div>
+      <div class="fl-cnt"><span class="dim" data-k="fl.matched"></span><span class="n">7</span></div>
+      <div class="h16"></div>
+
+      <div class="bean">
+        <div>
+          <div class="n" data-k="b1.n"></div>
+          <div class="m" data-k="b1.m"></div>
+          <div class="tags">
+            <span class="mini"><i class="dot" style="background:var(--fl-fruity)"></i><span data-k="f.blueberry"></span></span>
+            <span class="mini"><i class="dot" style="background:var(--fl-floral)"></i><span data-k="f.jasmine"></span></span>
+          </div>
+        </div>
+        <div class="sc">86.5</div>
+      </div>
+
+      <div class="bean">
+        <div>
+          <div class="n" data-k="b2.n"></div>
+          <div class="m" data-k="b2.m"></div>
+          <div class="tags">
+            <span class="mini"><i class="dot" style="background:var(--fl-fruity)"></i><span data-k="f.blackcurrant"></span></span>
+            <span class="mini"><i class="dot" style="background:var(--fl-sour)"></i><span data-k="f.winey"></span></span>
+          </div>
+        </div>
+        <div class="sc">87.0</div>
+      </div>
+
+      <div class="bean">
+        <div>
+          <div class="n" data-k="b3.n"></div>
+          <div class="m" data-k="b3.m"></div>
+          <div class="tags">
+            <span class="mini"><i class="dot" style="background:var(--fl-floral)"></i><span data-k="f.jasmine"></span></span>
+            <span class="mini"><i class="dot" style="background:var(--fl-sweet)"></i><span data-k="f.honey"></span></span>
+          </div>
+        </div>
+        <div class="sc">91.2</div>
+      </div>
+      <div class="h24"></div>
+    </div>
+  </div>
+  <div class="tabs" data-tabs></div>
+</section>
+
+<!-- ═══ 6. 로그 ═══ -->
+<section class="scr" data-s="log">
+  <div class="nav">
+    <span class="nav-t" data-k="log.nav"></span>
+    <button class="nav-a" data-k="log.export"></button>
+  </div>
+  <div class="body">
+    <div class="pad">
+      <div class="h16"></div>
+      <div class="mgrid">
+        <div class="mc"><div class="cap" data-k="log.month"></div><div class="v">18<small data-k="u.times"></small></div></div>
+        <div class="mc"><div class="cap" data-k="log.avg"></div><div class="v">7.2</div></div>
+      </div>
+      <div class="h24"></div>
+      <div class="cap" data-k="log.dialin"></div>
+      <div class="h8"></div>
+
+      <div class="log">
+        <div class="d" data-k="d.0814"></div>
+        <div class="c">
+          <div class="n" data-k="b1.n"></div>
+          <div class="p">V60 · 94 °C · 18 <span data-k="u.click"></span> · 3:28</div>
+          <div class="diff"><span data-k="df.t-1"></span><span data-k="df.g-2"></span></div>
+        </div>
+        <div class="s">7.5</div>
+      </div>
+
+      <div class="log">
+        <div class="d" data-k="d.0812"></div>
+        <div class="c">
+          <div class="n" data-k="b1.n"></div>
+          <div class="p">V60 · 95 °C · 20 <span data-k="u.click"></span> · 3:15</div>
+          <div class="diff"><span data-k="df.t+1"></span></div>
+        </div>
+        <div class="s">6.5</div>
+      </div>
+
+      <div class="log">
+        <div class="d" data-k="d.0810"></div>
+        <div class="c">
+          <div class="n" data-k="b1.n"></div>
+          <div class="p">V60 · 94 °C · 20 <span data-k="u.click"></span> · 3:05</div>
+          <div class="diff"><span data-k="df.first"></span></div>
+        </div>
+        <div class="s">6.0</div>
+      </div>
+
+      <div class="h24"></div>
+      <div class="cap" data-k="log.note"></div>
+      <div class="h8"></div>
+      <div class="fallback" id="fb">
+        <div class="b" id="fbBadge"></div>
+        <div class="x" data-k="log.noteBody"></div>
+      </div>
+
+      <div class="h24"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span class="dim" data-k="log.lang"></span>
+        <div class="langseg">
+          <button id="segKo" onclick="setLang('ko')">한국어</button>
+          <button id="segEn" onclick="setLang('en')">EN</button>
+        </div>
+      </div>
+      <div class="h24"></div>
+    </div>
+  </div>
+  <div class="tabs" data-tabs></div>
+</section>
+
+</div>
+
+<script>
+/* ══════════ i18n 사전 ══════════ */
+const T={
+ko:{
+ 'ob.nav':'시작하기','ob.skip':'건너뛰기','ob.q1':'어떤 드리퍼를 쓰세요?',
+ 'ob.q1sub':'레시피를 이 장비 기준으로 변환해 드립니다. 나중에 언제든 바꿀 수 있습니다.',
+ 'ob.all':'전체 17종 보기','ob.next':'다음',
+ 'g.v60p':'플라스틱 · 원뿔','g.v60c':'세라믹 · 원뿔','g.kalita':'스테인리스 · 평면',
+ 'g.origami':'세라믹 · 하이브리드','g.switch':'유리 · 침지 겸용','g.melitta':'플라스틱 · 원뿔',
+ 't.fast':'유속 빠름','t.preheat':'예열 필수','t.forgiving':'관용도 높음',
+ 't.swapfilter':'필터 교체형','t.repeat':'재현성 최상','t.slow':'유속 느림',
+
+ 'rec.nav':'추천 레시피','rec.back':'← 조건','rec.sort':'정렬',
+ 'rec.cond1':'에티오피아 구지 · 라이트 · 워시드 · 8일 경과',
+ 'rec.cond2':'V60 02 플라스틱 · Timemore C3 (20클릭 기준) · 목표 클래리티',
+ 'rec.meta1':'중국 · 우승 · 난이도 5','rec.meta2':'표준 레시피 · 난이도 2','rec.meta3':'표준 레시피 · 난이도 3',
+ 'rec.h2pour':'(2회 푸어)',
+ 'rec.r1':'라이트 + 워시드 + 플로럴 완전 일치','rec.r2':"목표 '클래리티'와 일치",
+ 'rec.r3':'Solo Dripper → V60 변환 필요','rec.r4':'Melodrip 없음 → 대체 방법 안내',
+ 'rec.r5':'V60 완전 일치 — 변환 불필요','rec.r6':'난이도 적합 — 특수 장비 없음',
+ 'rec.r7':"목표 '클래리티'보다 균형 지향",
+ 'rec.r8':'V60 완전 일치','rec.r9':'단맛·농도를 직접 조절 가능',
+ 'rec.convT':'내 장비 기준 변환값','rec.start':'이 레시피로 시작',
+ 'l.grind':'분쇄','l.temp':'온도','l.interval':'푸어 간격','l.ratio':'비율',
+
+ 'brew.exit':'✕ 나가기','brew.keep':'🔒 화면 유지','brew.next':'다음 ▶',
+ 'brew.pause':'⏸ 일시정지','brew.resume':'▶ 재개',
+ 'brew.lastNote':'지난 메모','brew.lastNoteBody':'온도 1도 낮추고 마지막 푸어를 20g 줄여볼 것',
+ 'brew.stepOf':'{c} / {t} 단계','brew.nextIn':'다음까지 {s}초',
+ 'brew.doneIn':'완료까지 {s}초','brew.done':'추출 완료',
+ 's.bloom':'블룸','s.pour2':'2차 푸어','s.pour3':'3차 푸어','s.draw':'드로우다운',
+ 'h.bloom':'10초 동안 · 중앙에서 나선','h.pour2':'20초 동안 · 나선',
+ 'h.pour3':'25초 동안 · 중앙 집중','h.draw':'3:10에 드리퍼 제거',
+
+ 'tas.nav':'추출 완료 · 3:28','tas.skip':'건너뛰기','tas.q':'어땠나요?',
+ 'tas.sub':'3개만 채우면 됩니다. 나머지는 선택입니다.',
+ 'tas.overall':'종합','tas.flavor':'가장 두드러진 향미','tas.more':'+ 더 찾기',
+ 'tas.next':'다음에 바꿀 것',
+ 'tas.ph':'예: 온도 1도 낮추고 3차 푸어를 20g 줄인다',
+ 'tas.detail':'세부 평가 · TDS · 사진','tas.optional':'선택 ▾','tas.save':'기록 저장',
+
+ 'fl.nav':'플레이버 탐색','fl.matched':'조건에 맞는 원두','fl.selected':'선택',
+ 'b1.n':'에티오피아 구지 함벨라','b1.m':'내추럴 · G1 · 1,900–2,100m · 라이트',
+ 'b2.n':'케냐 키리냐가 AA','b2.m':'워시드 · SL28/SL34 · 1,700m · 라이트',
+ 'b3.n':'파나마 게이샤 하시엔다','b3.m':'워시드 · Geisha · 1,700m · 라이트',
+ 'f.jasmine':'자스민','f.blueberry':'블루베리','f.brownsugar':'흑설탕','f.almond':'아몬드',
+ 'f.winey':'와인','f.burnt':'탄맛','f.blackcurrant':'블랙커런트','f.honey':'꿀',
+
+ 'log.nav':'브루잉 기록','log.export':'내보내기','log.month':'이번 달','log.avg':'평균 점수',
+ 'log.dialin':'에티오피아 구지 · 다이얼인 5회차',
+ 'log.note':'큐레이터 해설','log.lang':'언어',
+ 'log.noteBody':'같은 원두로 5회 다이얼인한 결과, 94°C에서 18클릭이 이 원두의 플로럴을 가장 잘 살렸습니다. 20클릭에서는 산미가 날카롭고 바디가 얇았습니다.',
+ 'd.0814':'8/14','d.0812':'8/12','d.0810':'8/10',
+ 'df.t-1':'온도 −1','df.g-2':'분쇄 −2','df.t+1':'온도 +1','df.first':'첫 시도',
+
+ 'u.pt':'점','u.click':'클릭','u.sec':'초','u.band':'밴드','u.times':'회',
+ 'tab.brew':'추출','tab.explore':'탐색','tab.log':'기록','tab.wiki':'위키'
+},
+en:{
+ 'ob.nav':'Get started','ob.skip':'Skip','ob.q1':'Which dripper do you use?',
+ 'ob.q1sub':'Recipes will be converted for this brewer. You can change it anytime.',
+ 'ob.all':'See all 17 brewers','ob.next':'Next',
+ 'g.v60p':'Plastic · Cone','g.v60c':'Ceramic · Cone','g.kalita':'Steel · Flat bottom',
+ 'g.origami':'Ceramic · Hybrid','g.switch':'Glass · Immersion capable','g.melitta':'Plastic · Cone',
+ 't.fast':'Fast flow','t.preheat':'Preheat required','t.forgiving':'Forgiving',
+ 't.swapfilter':'Swappable filter','t.repeat':'Most repeatable','t.slow':'Slow flow',
+
+ 'rec.nav':'Recommended','rec.back':'← Filters','rec.sort':'Sort',
+ 'rec.cond1':'Ethiopia Guji · Light · Washed · 8 days off roast',
+ 'rec.cond2':'V60 02 Plastic · Timemore C3 (anchor 20 clicks) · Goal: clarity',
+ 'rec.meta1':'China · 1st place · Difficulty 5',
+ 'rec.meta2':'Standard recipe · Difficulty 2','rec.meta3':'Standard recipe · Difficulty 3',
+ 'rec.h2pour':'(2 pours)',
+ 'rec.r1':'Exact match: light + washed + floral','rec.r2':"Matches your goal 'clarity'",
+ 'rec.r3':'Solo Dripper → V60 conversion needed','rec.r4':'No Melodrip → workaround provided',
+ 'rec.r5':'Exact V60 match — no conversion','rec.r6':'Difficulty fits — no special gear',
+ 'rec.r7':"Leans balanced rather than 'clarity'",
+ 'rec.r8':'Exact V60 match','rec.r9':'Sweetness and strength are adjustable',
+ 'rec.convT':'Converted for your setup','rec.start':'Start this recipe',
+ 'l.grind':'Grind','l.temp':'Temp','l.interval':'Pour interval','l.ratio':'Ratio',
+
+ 'brew.exit':'✕ Exit','brew.keep':'🔒 Keep screen on','brew.next':'Next ▶',
+ 'brew.pause':'⏸ Pause','brew.resume':'▶ Resume',
+ 'brew.lastNote':'Last note','brew.lastNoteBody':'Drop temp by 1°C and cut the final pour by 20 g',
+ 'brew.stepOf':'Step {c} / {t}','brew.nextIn':'Next in {s}s',
+ 'brew.doneIn':'Done in {s}s','brew.done':'Brew complete',
+ 's.bloom':'Bloom','s.pour2':'2nd pour','s.pour3':'3rd pour','s.draw':'Drawdown',
+ 'h.bloom':'10s · spiral from center','h.pour2':'20s · spiral',
+ 'h.pour3':'25s · center focused','h.draw':'Lift dripper at 3:10',
+
+ 'tas.nav':'Brew complete · 3:28','tas.skip':'Skip','tas.q':'How was it?',
+ 'tas.sub':'Just three fields. The rest is optional.',
+ 'tas.overall':'Overall','tas.flavor':'Most prominent flavor','tas.more':'+ Find more',
+ 'tas.next':'What to change next time',
+ 'tas.ph':'e.g. Drop temp 1°C and cut the 3rd pour by 20 g',
+ 'tas.detail':'Detailed scores · TDS · Photo','tas.optional':'Optional ▾','tas.save':'Save log',
+
+ 'fl.nav':'Flavor explorer','fl.matched':'Matching coffees','fl.selected':'SELECTED',
+ 'b1.n':'Ethiopia Guji Hambela','b1.m':'Natural · G1 · 1,900–2,100 m · Light',
+ 'b2.n':'Kenya Kirinyaga AA','b2.m':'Washed · SL28/SL34 · 1,700 m · Light',
+ 'b3.n':'Panama Geisha Hacienda','b3.m':'Washed · Geisha · 1,700 m · Light',
+ 'f.jasmine':'Jasmine','f.blueberry':'Blueberry','f.brownsugar':'Brown sugar','f.almond':'Almond',
+ 'f.winey':'Winey','f.burnt':'Burnt','f.blackcurrant':'Blackcurrant','f.honey':'Honey',
+
+ 'log.nav':'Brew log','log.export':'Export','log.month':'This month','log.avg':'Avg score',
+ 'log.dialin':'Ethiopia Guji · dial-in #5',
+ 'log.note':'Curator note','log.lang':'Language',
+ 'log.noteBody':'같은 원두로 5회 다이얼인한 결과, 94°C에서 18클릭이 이 원두의 플로럴을 가장 잘 살렸습니다. 20클릭에서는 산미가 날카롭고 바디가 얇았습니다.',
+ 'd.0814':'Aug 14','d.0812':'Aug 12','d.0810':'Aug 10',
+ 'df.t-1':'Temp −1','df.g-2':'Grind −2','df.t+1':'Temp +1','df.first':'First try',
+
+ 'u.pt':'pt','u.click':'clicks','u.sec':'s','u.band':'band','u.times':'brews',
+ 'tab.brew':'Brew','tab.explore':'Explore','tab.log':'Log','tab.wiki':'Wiki'
+}};
+
+let LANG='ko';
+function t(k,v){
+  let s=(T[LANG]&&T[LANG][k])!==undefined?T[LANG][k]:k;   // 누락 키는 키 그대로 노출
+  if(v) for(const n in v) s=s.replace('{'+n+'}',v[n]);
+  return s;
+}
+
+/* 하단 탭 렌더 */
+const TABS=[['☕','tab.brew'],['🔍','tab.explore'],['📓','tab.log'],['📖','tab.wiki']];
+function renderTabs(){
+  document.querySelectorAll('[data-tabs]').forEach((el,si)=>{
+    const active=['rec','fl','log'][si];
+    const map={rec:0,fl:1,log:2};
+    el.innerHTML=TABS.map((x,i)=>
+      `<button class="tab${i===map[active]?' on':''}"><span class="ic">${x[0]}</span><span class="lb">${t(x[1])}</span></button>`
+    ).join('');
+  });
+}
+
+function setLang(l){
+  LANG=l;
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-k]').forEach(el=>{ el.textContent=t(el.dataset.k); });
+  document.getElementById('tasInp').placeholder=t('tas.ph');
+  document.getElementById('wlbl').textContent=t('fl.selected');
+  document.getElementById('pz').textContent=paused?t('brew.resume'):t('brew.pause');
+  // 폴백 배지: 영어판에서 한국어 원문만 있을 때
+  const fb=document.getElementById('fbBadge');
+  fb.textContent = l==='en' ? 'ⓘ Korean only' : 'ⓘ 원문 · 한국어';
+  document.getElementById('fb').style.display='block';
+  // 버튼 상태
+  bKo.classList.toggle('on',l==='ko'); bEn.classList.toggle('on',l==='en');
+  segKo.classList.toggle('on',l==='ko'); segEn.classList.toggle('on',l==='en');
+  renderTabs(); paintWheel(); if(t0) paint();
+}
+
+/* ── 화면 전환 ── */
+const SCR=[['ob','1 온보딩'],['rec','2 추천 결과'],['brew','3 추출 가이드'],
+           ['tas','4 테이스팅'],['fl','5 플레이버'],['log','6 로그']];
+const navEl=document.getElementById('navScr');
+SCR.forEach(([k,l],i)=>{
+  const b=document.createElement('button');
+  b.textContent=l; b.dataset.k=k; if(i===0)b.className='on';
+  b.onclick=()=>go(k); navEl.appendChild(b);
+});
+function go(k){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.dataset.s===k));
+  navEl.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+}
+
+function theme(){
+  const d=document.documentElement.dataset.theme==='dark';
+  document.documentElement.dataset.theme=d?'light':'dark';
+  document.getElementById('btnTheme').textContent=d?'🌙 다크':'☀ 라이트';
+}
+function wide(){
+  const p=document.getElementById('phone'); p.classList.toggle('wide');
+  document.getElementById('btnWide').textContent=p.classList.contains('wide')?'📱 폰 폭':'🖥 넓은 화면';
+}
+
+/* ── 추출 타이머 ── */
+const STEPS=[
+  {k:'bloom',g:45, start:0,  end:45},
+  {k:'pour2',g:145,start:45, end:90},
+  {k:'pour3',g:240,start:90, end:190},
+  {k:'draw', g:240,start:190,end:210}
+];
+let t0=null,raf=null,paused=false,pauseAt=0,idx=0;
+
+function startBrew(){
+  go('brew'); t0=performance.now(); idx=0; paused=false;
+  document.getElementById('pz').textContent=t('brew.pause');
+  cancelAnimationFrame(raf); loop();
+}
+function toggleBrew(){
+  if(!t0)return startBrew();
+  const b=document.getElementById('pz');
+  if(paused){ t0=performance.now()-pauseAt; paused=false; b.textContent=t('brew.pause'); loop(); }
+  else{ pauseAt=performance.now()-t0; paused=true; b.textContent=t('brew.resume'); cancelAnimationFrame(raf); }
+}
+function nextStep(){ if(idx<STEPS.length-1){ idx++; t0=performance.now()-STEPS[idx].start*1000; } }
+
+function paint(){
+  const el=t0?(paused?pauseAt:performance.now()-t0)/1000:0;
+  while(idx<STEPS.length-1 && el>=STEPS[idx].end) idx++;
+  const s=STEPS[idx];
+  const m=Math.floor(el/60), sec=Math.floor(el%60);
+  tm.textContent=m+':'+String(sec).padStart(2,'0');
+  stp.textContent=t('s.'+s.k);
+  tgt.textContent=s.g;
+  how.textContent=t('h.'+s.k);
+  pl.textContent=t('brew.stepOf',{c:idx+1,t:STEPS.length});
+  pf.style.width=Math.min(100,el/210*100)+'%';
+  const left=Math.max(0,Math.ceil(s.end-el));
+  nxt.textContent = idx===STEPS.length-1
+    ? (left>0?t('brew.doneIn',{s:left}):t('brew.done'))
+    : t('brew.nextIn',{s:left});
+  tm.classList.toggle('alert',left<=3&&left>0);
+}
+function loop(){ if(paused)return; paint(); raf=requestAnimationFrame(loop); }
+
+/* ── 플레이버 휠 ── */
+const FL=[['Fruity','--fl-fruity'],['Sour','--fl-sour'],['Green','--fl-green'],
+          ['Other','--fl-other'],['Roasted','--fl-roasted'],['Spices','--fl-spices'],
+          ['Nutty','--fl-nutty'],['Sweet','--fl-sweet'],['Floral','--fl-floral']];
+const SEL=[0,8];
+function paintWheel(){
+  const g=document.getElementById('wg'); g.innerHTML='';
+  const C=126,R0=40,R1=112;
+  FL.forEach((f,i)=>{
+    const a0=(i/9)*2*Math.PI-Math.PI/2+.012, a1=((i+1)/9)*2*Math.PI-Math.PI/2-.012;
+    const p=(r,a)=>[C+r*Math.cos(a),C+r*Math.sin(a)];
+    const [x1,y1]=p(R0,a0),[x2,y2]=p(R1,a0),[x3,y3]=p(R1,a1),[x4,y4]=p(R0,a1);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1} ${y1}L${x2} ${y2}A${R1} ${R1} 0 0 1 ${x3} ${y3}L${x4} ${y4}A${R0} ${R0} 0 0 0 ${x1} ${y1}Z`);
+    const on=SEL.includes(i);
+    path.setAttribute('fill',`var(${f[1]})`);
+    path.setAttribute('opacity',on?'1':'.2');
+    path.setAttribute('stroke','var(--paper)'); path.setAttribute('stroke-width','2');
+    g.appendChild(path);
+    const am=(a0+a1)/2,[tx,ty]=p((R0+R1)/2,am);
+    const tx2=document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx2.setAttribute('x',tx); tx2.setAttribute('y',ty+3.5);
+    tx2.setAttribute('text-anchor','middle'); tx2.setAttribute('font-size','10');
+    tx2.setAttribute('font-weight','600'); tx2.setAttribute('fill',on?'#fff':'var(--ink-3)');
+    tx2.textContent=f[0];
+    g.appendChild(tx2);
+  });
+}
+
+/* 초기화
+   실제 사이트: (navigator.language||'').startsWith('ko') ? 'ko' : 'en'
+              → 이후 localStorage에 저장된 사용자 선택이 우선
+   목업에서는 검토 편의상 한국어로 시작합니다. 상단 버튼으로 전환하세요. */
+setLang('ko');
+paint();
+</script>
+</body>
+</html>

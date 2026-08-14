@@ -1,0 +1,26 @@
+# 브루잉 로그 백업 — 개인 데이터. 커밋하지 않습니다.
+logs/
+*.brewlog.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node (Phase 4에서 Vite/Next 전환 시)
+node_modules/
+dist/
+.next/
+.env
+.env.local
+.vercel
+
+# 임시
+*.tmp
+*.bak
