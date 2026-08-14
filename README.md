@@ -9,15 +9,56 @@
 
 ## 현재 상태
 
-**Phase 0 (기획·데이터 설계) 완료** — 아직 애플리케이션 코드는 없습니다.
+**Phase 1a 완료** — 데이터 로딩 · 온보딩 · 다국어 구조가 동작합니다.
 
 | 구분 | 상태 |
 |---|---|
 | 기획서 | 완료 — [`docs/01-project-plan.md`](docs/01-project-plan.md) |
 | 디자인 시스템 | 완료 — [`docs/02-design-system.md`](docs/02-design-system.md) |
-| 디자인 목업 | 완료 — [`docs/mockup.html`](docs/mockup.html) (브라우저로 열면 동작) |
-| 시드 데이터 | 완료 — `data/` 4종 |
-| 애플리케이션 | **미착수** — Phase 1a |
+| 디자인 목업 | 완료 — [`docs/mockup.html`](docs/mockup.html) |
+| 시드 데이터 | 완료 — `data/` 4종 + i18n 3종 |
+| **앱 — 온보딩 · i18n** | **동작** — `index.html` |
+| 앱 — 추천 엔진 | 미착수 — Phase 1b |
+| 앱 — 추출 가이드 | 미착수 — Phase 1c |
+| 앱 — 브루잉 로그 | 미착수 — Phase 1d |
+
+---
+
+## 실행
+
+`fetch()`로 JSON을 읽으므로 **`file://`로 직접 열면 동작하지 않습니다.**
+브라우저 보안 정책상 로컬 파일을 그렇게 읽을 수 없기 때문입니다.
+(앱이 이 상황을 감지해 안내 화면을 띄웁니다.)
+
+```bash
+python -m http.server 8000
+#  또는
+npx serve .
+```
+
+브라우저에서 <http://localhost:8000> 을 엽니다.
+같은 Wi-Fi의 폰에서 보려면 PC의 로컬 IP로 접속하세요 — 예: `http://192.168.0.10:8000`
+
+---
+
+## 구조
+
+```
+index.html              앱 셸
+assets/
+  ├─ style.css          디자인 토큰 + 컴포넌트
+  └─ app.js             Store · I18n · Data · Grind · App
+data/
+  ├─ brewers.json       드리퍼 17
+  ├─ grinders.json      그라인더 21 + 앵커
+  ├─ flavor-nodes.json  향미 용어 83
+  ├─ recipes.json       레시피 9
+  └─ i18n/
+      ├─ ko.json        UI 문자열 (한국어)
+      ├─ en.json        UI 문자열 (영어)
+      └─ terms.json     열거형 코드 → 표시명 사전
+docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 절차
+```
 
 ---
 
@@ -29,12 +70,14 @@
 | [`data/grinders.json`](data/grinders.json) | 그라인더 카탈로그 + 분쇄도 앵커 | 21 |
 | [`data/flavor-nodes.json`](data/flavor-nodes.json) | 향미 용어 계층 (L1 9 · L2 28 · L3 46) | 83 |
 | [`data/recipes.json`](data/recipes.json) | 표준 레시피 8 + 챔피언 1 | 9 |
+| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 75 |
+| [`data/i18n/terms.json`](data/i18n/terms.json) | 열거형 코드 사전 | 14종 |
 
-미작성: `data/beans.json`, `data/i18n/{ko,en,terms}.json`
+미작성: `data/beans.json`
 
 ---
 
-## 핵심 설계 두 가지
+## 핵심 설계 세 가지
 
 ### 1. 분쇄도 — 마이크론이 아니라 앵커 + 밴드
 
@@ -64,6 +107,23 @@ Fellow Ode Gen2   앵커 4  + 2×1 = 6 번
 - 회원가입 장벽이 로그 작성률을 죽입니다. 로그의 가치는 "쉽게 남길 수 있음"에서 나옵니다
 - 서버·DB·인증·개인정보처리방침이 전부 따라옵니다
 - 대신 **localStorage + JSON 내보내기/불러오기**를 눈에 띄는 곳에 둡니다
+
+### 3. 다국어 — 번역 비용을 3층으로 나눈다
+
+전부 번역하려 들면 프로젝트가 무너집니다. 층별로 비용이 다릅니다.
+
+| 층 | 대상 | 비용 | 처리 |
+|---|---|---|---|
+| UI 문자열 | 버튼·라벨 약 75개 | 낮음, 1회 | `data/i18n/{ko,en}.json` |
+| 열거형 | 프로세스·재질·유속 등 14종 | 낮음, 1회 | `data/i18n/terms.json` |
+| 서술형 | 해설, 코치 노트, 위키 문서 | **높음, 계속 증가** | **폴백 허용** |
+
+서술형은 `{ ko, en, source_lang }` 구조이고, 번역이 없으면 **원문을 그대로 보여주고 배지로 표시**합니다.
+번역 완료를 기다리면 영어판이 영원히 안 나오기 때문입니다.
+기계번역을 자동으로 채우지는 않습니다 — 커피 용어에서 자주 틀리고, 틀린 해설은 없느니만 못합니다.
+
+또한 데이터에는 **한글을 직접 박지 않고 코드만 저장**합니다.
+`process: "natural"` 하나만 두면 표시명은 사전 한 곳에서 해결되고, 언어를 추가할 때 데이터를 손대지 않아도 됩니다.
 
 ---
 
@@ -106,7 +166,7 @@ SCA 휠은 [CC BY-NC-ND 4.0](https://sca.coffee/research/coffee-tasters-flavor-w
 ## 로드맵
 
 - [x] **Phase 0** — 기획, 디자인 시스템, 시드 데이터
-- [ ] **Phase 1a** — 데이터 로딩 + 온보딩 + i18n 구조
+- [x] **Phase 1a** — 데이터 로딩 + 온보딩 + i18n 구조
 - [ ] **Phase 1b** — 추천 엔진 (스코어링 + 장비 변환)
 - [ ] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
 - [ ] **Phase 1d** — 브루잉 로그 (저장 + JSON 내보내기)

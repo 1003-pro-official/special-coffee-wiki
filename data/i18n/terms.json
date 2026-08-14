@@ -1,0 +1,139 @@
+{
+  "_meta": {
+    "schema_version": "0.3",
+    "설명": [
+      "열거형 코드 → 언어별 표시명 사전입니다.",
+      "데이터 파일에는 코드만 저장하고(예: process: 'natural'), 표시는 이 사전에서 조회합니다.",
+      "이렇게 해야 언어를 추가할 때 데이터 전체를 손보지 않고 이 파일만 채우면 됩니다.",
+      "앱 사용법: term('process', 'natural') → '내추럴' 또는 'Natural'"
+    ]
+  },
+
+  "process": {
+    "washed":              { "ko": "워시드",       "en": "Washed" },
+    "natural":             { "ko": "내추럴",       "en": "Natural" },
+    "honey":               { "ko": "허니",         "en": "Honey" },
+    "anaerobic":           { "ko": "무산소 발효",  "en": "Anaerobic" },
+    "carbonic-maceration": { "ko": "탄산 침용",    "en": "Carbonic Maceration" },
+    "wet-hulled":          { "ko": "웻 헐드",      "en": "Wet-Hulled" }
+  },
+
+  "roast_level": {
+    "light":        { "ko": "라이트",     "en": "Light" },
+    "light-medium": { "ko": "라이트 미디엄", "en": "Light-Medium" },
+    "medium":       { "ko": "미디엄",     "en": "Medium" },
+    "medium-dark":  { "ko": "미디엄 다크", "en": "Medium-Dark" },
+    "full-city":    { "ko": "풀시티",     "en": "Full City" },
+    "dark":         { "ko": "다크",       "en": "Dark" }
+  },
+
+  "geometry": {
+    "cone":               { "ko": "원뿔",        "en": "Cone" },
+    "flat":               { "ko": "평면",        "en": "Flat bottom" },
+    "hybrid":             { "ko": "하이브리드",  "en": "Hybrid" },
+    "hybrid_immersion":   { "ko": "침지 겸용",   "en": "Immersion capable" },
+    "immersion":          { "ko": "침지",        "en": "Immersion" },
+    "pressure_immersion": { "ko": "가압 침지",   "en": "Pressure immersion" }
+  },
+
+  "material": {
+    "plastic": { "ko": "플라스틱",   "en": "Plastic" },
+    "ceramic": { "ko": "세라믹",     "en": "Ceramic" },
+    "glass":   { "ko": "유리",       "en": "Glass" },
+    "steel":   { "ko": "스테인리스", "en": "Steel" },
+    "resin":   { "ko": "레진",       "en": "Resin" }
+  },
+
+  "flow_rate": {
+    "very_slow":    { "ko": "매우 느림", "en": "Very slow" },
+    "slow":         { "ko": "느림",      "en": "Slow" },
+    "medium":       { "ko": "보통",      "en": "Medium" },
+    "fast":         { "ko": "빠름",      "en": "Fast" },
+    "very_fast":    { "ko": "매우 빠름", "en": "Very fast" },
+    "controllable": { "ko": "조절 가능", "en": "Controllable" }
+  },
+
+  "thermal_mass": {
+    "low":    { "ko": "열관성 낮음", "en": "Low thermal mass" },
+    "medium": { "ko": "열관성 보통", "en": "Medium thermal mass" },
+    "high":   { "ko": "열관성 높음", "en": "High thermal mass" }
+  },
+
+  "burr_shape": {
+    "conical": { "ko": "코니컬", "en": "Conical" },
+    "flat":    { "ko": "플랫",   "en": "Flat" },
+    "unknown": { "ko": "미상",   "en": "Unknown" }
+  },
+
+  "grinder_type": {
+    "manual":   { "ko": "핸드밀", "en": "Manual" },
+    "electric": { "ko": "전동",   "en": "Electric" },
+    "unknown":  { "ko": "미상",   "en": "Unknown" }
+  },
+
+  "adjust_unit": {
+    "click":        { "ko": "클릭", "en": "clicks" },
+    "step":         { "ko": "단",   "en": "steps" },
+    "dial":         { "ko": "눈금", "en": "dial" },
+    "micron_dial":  { "ko": "µm",   "en": "µm" },
+    "user_defined": { "ko": "값",   "en": "value" }
+  },
+
+  "band": {
+    "-3": { "ko": "매우 곱게",   "en": "Much finer" },
+    "-2": { "ko": "곱게",        "en": "Finer" },
+    "-1": { "ko": "약간 곱게",   "en": "Slightly finer" },
+    "0":  { "ko": "V60 표준",    "en": "V60 standard" },
+    "1":  { "ko": "약간 굵게",   "en": "Slightly coarser" },
+    "2":  { "ko": "중간-굵게",   "en": "Medium-coarse" },
+    "3":  { "ko": "굵게",        "en": "Coarse" },
+    "4":  { "ko": "매우 굵게",   "en": "Very coarse" }
+  },
+
+  "confidence": {
+    "high":   { "ko": "출처 확실",   "en": "Well sourced" },
+    "medium": { "ko": "통설",        "en": "Community consensus" },
+    "low":    { "ko": "추정 · 실측 권장", "en": "Estimated — measure yourself" },
+    "n/a":    { "ko": "직접 입력",   "en": "User defined" }
+  },
+
+  "water_preset": {
+    "filtered": { "ko": "정수",          "en": "Filtered" },
+    "tap":      { "ko": "수돗물",        "en": "Tap water" },
+    "samdasoo": { "ko": "삼다수",        "en": "Samdasoo" },
+    "volvic":   { "ko": "볼빅",          "en": "Volvic" },
+    "custom":   { "ko": "커스텀 미네랄", "en": "Custom mineral" }
+  },
+
+  "source_type": {
+    "championship": { "ko": "대회",     "en": "Championship" },
+    "standard":     { "ko": "표준",     "en": "Standard" },
+    "roaster":      { "ko": "로스터",   "en": "Roaster" },
+    "community":    { "ko": "커뮤니티", "en": "Community" },
+    "mine":         { "ko": "내 레시피", "en": "Mine" }
+  },
+
+  "step_type": {
+    "preheat":  { "ko": "예열",        "en": "Preheat" },
+    "bloom":    { "ko": "블룸",        "en": "Bloom" },
+    "pour":     { "ko": "푸어",        "en": "Pour" },
+    "wait":     { "ko": "대기",        "en": "Wait" },
+    "agitate":  { "ko": "교반",        "en": "Agitate" },
+    "valve":    { "ko": "밸브",        "en": "Valve" },
+    "release":  { "ko": "배출",        "en": "Release" },
+    "press":    { "ko": "압착",        "en": "Press" },
+    "drawdown": { "ko": "드로우다운",  "en": "Drawdown" },
+    "done":     { "ko": "완료",        "en": "Done" }
+  },
+
+  "goal": {
+    "clarity":       { "ko": "클래리티", "en": "Clarity" },
+    "sweetness":     { "ko": "단맛",     "en": "Sweetness" },
+    "body":          { "ko": "바디",     "en": "Body" },
+    "acidity":       { "ko": "산미",     "en": "Acidity" },
+    "balance":       { "ko": "밸런스",   "en": "Balance" },
+    "floral":        { "ko": "플로럴",   "en": "Floral" },
+    "repeatability": { "ko": "재현성",   "en": "Repeatability" },
+    "adjustable":    { "ko": "조절 가능", "en": "Adjustable" }
+  }
+}
