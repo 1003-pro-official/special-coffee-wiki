@@ -9,7 +9,7 @@
 
 ## 현재 상태
 
-**Phase 1a 완료** — 데이터 로딩 · 온보딩 · 다국어 구조가 동작합니다.
+**Phase 1b 완료** — 장비를 고르면 레시피가 내 기준으로 변환돼 추천됩니다.
 
 | 구분 | 상태 |
 |---|---|
@@ -17,8 +17,8 @@
 | 디자인 시스템 | 완료 — [`docs/02-design-system.md`](docs/02-design-system.md) |
 | 디자인 목업 | 완료 — [`docs/mockup.html`](docs/mockup.html) |
 | 시드 데이터 | 완료 — `data/` 4종 + i18n 3종 |
-| **앱 — 온보딩 · i18n** | **동작** — `index.html` |
-| 앱 — 추천 엔진 | 미착수 — Phase 1b |
+| **앱 — 온보딩 · i18n** | **동작** |
+| **앱 — 추천 엔진** | **동작** — `assets/engine.js` |
 | 앱 — 추출 가이드 | 미착수 — Phase 1c |
 | 앱 — 브루잉 로그 | 미착수 — Phase 1d |
 
@@ -47,7 +47,8 @@ npx serve .
 index.html              앱 셸
 assets/
   ├─ style.css          디자인 토큰 + 컴포넌트
-  └─ app.js             Store · I18n · Data · Grind · App
+  ├─ engine.js          Grind · Score · Convert · Engine  (DOM 의존 없음)
+  └─ app.js             Store · I18n · Data · App        (화면·이벤트)
 data/
   ├─ brewers.json       드리퍼 17
   ├─ grinders.json      그라인더 21 + 앵커
@@ -57,8 +58,18 @@ data/
       ├─ ko.json        UI 문자열 (한국어)
       ├─ en.json        UI 문자열 (영어)
       └─ terms.json     열거형 코드 → 표시명 사전
+test/engine.test.mjs    추천 엔진 단위 테스트 40건
 docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 절차
 ```
+
+### 테스트
+
+```bash
+node test/engine.test.mjs
+```
+
+`engine.js`에는 DOM 의존이 없어 Node에서 그대로 돌아갑니다.
+실제 `data/*.json`을 읽어 검증하므로, 데이터를 고치면 테스트가 먼저 깨집니다.
 
 ---
 
@@ -70,14 +81,14 @@ docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 
 | [`data/grinders.json`](data/grinders.json) | 그라인더 카탈로그 + 분쇄도 앵커 | 21 |
 | [`data/flavor-nodes.json`](data/flavor-nodes.json) | 향미 용어 계층 (L1 9 · L2 28 · L3 46) | 83 |
 | [`data/recipes.json`](data/recipes.json) | 표준 레시피 8 + 챔피언 1 | 9 |
-| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 75 |
+| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 145 |
 | [`data/i18n/terms.json`](data/i18n/terms.json) | 열거형 코드 사전 | 14종 |
 
 미작성: `data/beans.json`
 
 ---
 
-## 핵심 설계 세 가지
+## 핵심 설계 네 가지
 
 ### 1. 분쇄도 — 마이크론이 아니라 앵커 + 밴드
 
@@ -108,7 +119,28 @@ Fellow Ode Gen2   앵커 4  + 2×1 = 6 번
 - 서버·DB·인증·개인정보처리방침이 전부 따라옵니다
 - 대신 **localStorage + JSON 내보내기/불러오기**를 눈에 띄는 곳에 둡니다
 
-### 3. 다국어 — 번역 비용을 3층으로 나눈다
+### 3. 추천은 규칙 기반이고, 점수와 적합도를 분리한다
+
+ML이 아니라 100점 가중 스코어입니다. **추천 근거를 화면에 설명할 수 있어야 공부가 되기 때문**입니다.
+
+| 항목 | 배점 |
+|---|---|
+| 드리퍼 적합도 | 30 |
+| 로스팅 정도 근접 | 20 |
+| 프로세스 · 향미 | 20 |
+| 목표 일치 | 15 |
+| 난이도 적합 | 10 |
+| 출처 검증 | 5 |
+
+**점수만 보여주면 오해가 생깁니다.** 난이도 항목이 쉬운 레시피 모두에게 10점을 주고
+드리퍼도 같은 geometry면 16점을 주기 때문에, 전혀 맞지 않는 레시피도 40점대가 나옵니다.
+
+그래서 점수는 **순위를 매기기 위한 상대값**으로만 쓰고,
+절대적인 적합 여부는 `Score.fit()`이 따로 판정합니다.
+로스팅 정도가 2단계 이상 벌어지고 향미·목표가 하나도 안 맞으면 `mismatch`로 분류해
+목록 아래쪽에 "조건에 맞지 않는 레시피"로 분리하고, 40점대를 '그럭저럭'으로 읽지 않게 합니다.
+
+### 4. 다국어 — 번역 비용을 3층으로 나눈다
 
 전부 번역하려 들면 프로젝트가 무너집니다. 층별로 비용이 다릅니다.
 
@@ -167,7 +199,7 @@ SCA 휠은 [CC BY-NC-ND 4.0](https://sca.coffee/research/coffee-tasters-flavor-w
 
 - [x] **Phase 0** — 기획, 디자인 시스템, 시드 데이터
 - [x] **Phase 1a** — 데이터 로딩 + 온보딩 + i18n 구조
-- [ ] **Phase 1b** — 추천 엔진 (스코어링 + 장비 변환)
+- [x] **Phase 1b** — 추천 엔진 (스코어링 + 장비 변환)
 - [ ] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
 - [ ] **Phase 1d** — 브루잉 로그 (저장 + JSON 내보내기)
 - [ ] **Phase 2** — 챔피언 레시피 아카이브 (12~15개)

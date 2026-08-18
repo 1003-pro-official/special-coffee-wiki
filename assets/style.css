@@ -259,3 +259,103 @@ a { color:var(--accent); }
 @media (prefers-reduced-motion:reduce) {
   *, *::before, *::after { transition:none !important; animation:none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   Phase 1b — 추천 입력 / 결과
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 칩 (다중 선택) ── */
+.chipset { display:flex; flex-wrap:wrap; gap:7px; }
+.chip {
+  min-height:36px; padding-inline:14px; border-radius:18px;
+  border:1px solid var(--line-strong); background:transparent;
+  color:var(--ink-2); font-size:var(--f-label); font-weight:500;
+  display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+  transition:background .12s, border-color .12s, color .12s;
+}
+.chip[aria-pressed="true"] {
+  background:var(--accent-weak); border-color:var(--accent);
+  color:var(--accent); font-weight:600;
+}
+.chip__dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+/* ── 섹션 ── */
+.section + .section { margin-top:var(--s8); }
+.section__head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); }
+.field + .field { margin-top:var(--s5); }
+.field__label { display:block; margin-bottom:var(--s2); }
+.field__hint { margin-top:var(--s2); }
+
+/* ── 결과 카드 ── */
+.rc {
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--s5); background:var(--paper);
+}
+.rc + .rc { margin-top:var(--s3); }
+.rc--top { border-color:var(--accent); border-width:2px; padding:calc(var(--s5) - 1px); }
+.rc--mismatch { opacity:.72; }
+
+.rc__head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); }
+.rc__name { font-size:var(--f-subtitle); font-weight:600; line-height:1.4; }
+.rc__meta { font-size:var(--f-caption); color:var(--ink-3); margin-top:var(--s1); font-weight:500; }
+.rc__score { display:flex; align-items:baseline; flex-shrink:0; }
+
+.bar { height:6px; background:var(--accent-weak); border-radius:3px; overflow:hidden; margin:var(--s4) 0; }
+.bar__fill { height:100%; background:var(--accent); border-radius:3px; }
+.rc--mismatch .bar__fill { background:var(--ink-4); }
+
+/* 적합도 배지 — 점수만 보면 40점대를 '그럭저럭'으로 오해하므로 함께 표기 */
+.badge {
+  display:inline-block; font-size:10px; font-weight:600; letter-spacing:.04em;
+  padding:3px 7px; border-radius:3px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink-3);
+}
+.badge--high { border-color:var(--accent); color:var(--accent); background:var(--accent-weak); }
+.badge--mismatch { border-color:var(--warn); color:var(--warn); }
+
+/* ── 근거 ── */
+.reason { display:flex; gap:var(--s2); font-size:var(--f-label); line-height:1.5; color:var(--ink-2); }
+.reason + .reason { margin-top:7px; }
+.reason__mark { flex-shrink:0; width:13px; font-weight:700; }
+.reason--ok   .reason__mark { color:var(--accent); }
+.reason--warn .reason__mark { color:var(--warn); }
+
+/* ── 변환값 ── */
+.conv { background:var(--surface); border-radius:6px; padding:var(--s3) var(--s4); margin-top:var(--s4); }
+.conv__row {
+  display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3);
+  font-size:var(--f-label); padding-block:var(--s1);
+}
+.conv__row + .conv__row { border-top:1px solid var(--line); }
+.conv__label { color:var(--ink-3); flex-shrink:0; }
+.conv__value { font-weight:600; color:var(--ink); text-align:right; }
+.conv__was { font-weight:400; color:var(--ink-4); margin-right:6px; text-decoration:line-through; }
+.conv__note { font-size:var(--f-caption); color:var(--ink-3); font-weight:400; margin-top:2px; line-height:1.45; }
+
+/* ── 주의 ── */
+.caution { margin-top:var(--s4); }
+.caution__item { display:flex; gap:var(--s2); font-size:var(--f-label); line-height:1.55; color:var(--ink-2); }
+.caution__item + .caution__item { margin-top:var(--s2); }
+.caution__mark { flex-shrink:0; width:13px; color:var(--warn); font-weight:700; }
+
+/* ── 세그먼트 (난이도) ── */
+.segfull { display:flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+.segfull button {
+  flex:1; min-height:var(--tap); font-size:var(--f-label); font-weight:600; color:var(--ink-3);
+}
+.segfull button + button { border-left:1px solid var(--line-strong); }
+.segfull button[aria-pressed="true"] { background:var(--accent); color:var(--paper); }
+
+/* ── 숫자 입력 ── */
+.numfield {
+  display:flex; align-items:center; gap:var(--s3);
+  border:1px solid var(--line-strong); border-radius:var(--radius);
+  padding:var(--s2) var(--s3);
+}
+.numfield input {
+  flex:1; min-width:0; border:none; background:transparent; outline:none;
+  font-size:var(--f-subtitle); font-weight:600; text-align:center;
+}
+.numfield input::-webkit-outer-spin-button,
+.numfield input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.numfield input[type=number] { -moz-appearance:textfield; }
