@@ -121,7 +121,7 @@ const term = (ty, c) => I18n.term(ty, c);
    Data
    ──────────────────────────────────────────── */
 const Data = {
-  brewers: [], grinders: [], flavorNodes: [], recipes: [], beans: [],
+  brewers: [], grinders: [], flavorNodes: [], recipes: [], beans: [], wiki: [],
   byId: { brewer: {}, grinder: {}, flavor: {}, recipe: {}, bean: {} },
 
   async loadAll(lang) {
@@ -130,10 +130,10 @@ const Data = {
       if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
       return res.json();
     };
-    const [brewers, grinders, flavor, recipes, beans, terms, dict] = await Promise.all([
+    const [brewers, grinders, flavor, recipes, beans, terms, dict, wiki] = await Promise.all([
       get('data/brewers.json'), get('data/grinders.json'),
       get('data/flavor-nodes.json'), get('data/recipes.json'), get('data/beans.json'),
-      get('data/i18n/terms.json'), get(`data/i18n/${lang}.json`)
+      get('data/i18n/terms.json'), get(`data/i18n/${lang}.json`), get('data/wiki.json')
     ]);
 
     this.brewers = brewers.brewers;
@@ -141,6 +141,7 @@ const Data = {
     this.flavorNodes = flavor.nodes;
     this.recipes = recipes.recipes;
     this.beans = beans.beans;
+    this.wiki = wiki.articles;
     I18n.terms = terms;
     I18n.dict = dict;
 
@@ -191,6 +192,10 @@ const App = {
   // Phase 1c — 추출 세션
   brew: { result: null, plan: null, session: null, sound: true, wake: false, wakeFailed: false },
 
+  // Phase 4 — 분석 / 위키
+  analysis: { recipeId: null },
+  wikiId: null,
+
   // Phase 3 — 플레이버 탐색
   flavor: { drill: null, selected: [], mode: 'or', openBean: null },
 
@@ -198,7 +203,7 @@ const App = {
   archive: { type: 'all', geometry: null, roast: null, difficulty: null, openId: null },
 
   // Phase 1d — 테이스팅 입력 / 로그
-  tasting: { overall: null, flavor_nodes: [], next_action: '' },
+  tasting: { overall: null, flavor_nodes: [], next_action: '', tds_pct: null, beverage_g: null },
   logs: [],
   logDetailId: null,
   toast: null,
@@ -241,6 +246,9 @@ const App = {
     else if (this.page === 'brew-prep')  root.innerHTML = this.viewBrewPrep();
     else if (this.page === 'brew')       root.innerHTML = this.viewBrew();
     else if (this.page === 'brew-done')  root.innerHTML = this.viewBrewDone();
+    else if (this.page === 'analysis')   root.innerHTML = this.viewAnalysis();
+    else if (this.page === 'wiki')       root.innerHTML = this.viewWiki();
+    else if (this.page === 'wiki-doc')   root.innerHTML = this.viewWikiDoc();
     else if (this.page === 'flavor')     root.innerHTML = this.viewFlavor();
     else if (this.page === 'bean')       root.innerHTML = this.viewBeanDetail();
     else if (this.page === 'archive')    root.innerHTML = this.viewArchive();
@@ -522,7 +530,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       ['☕', 'tab.brew',    'brew',    'go-home'],
       ['🔍', 'tab.explore', 'explore', 'go-archive'],
       ['📓', 'tab.log',     'logs',    'go-logs'],
-      ['📖', 'tab.wiki',    'wiki',    null]       // Phase 4
+      ['📖', 'tab.wiki',    'wiki',    'go-wiki']
     ];
     return `<nav class="tabbar">${items.map(([ic, k, id, act]) =>
       `<button class="tabbar__item" ${id === active ? 'aria-current="page"' : ''}
@@ -1055,6 +1063,32 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
                   placeholder="${esc(t('tas.nextPh'))}">${esc(this.tasting.next_action)}</textarea>
         <p class="dim field__hint">${esc(t('tas.nextHint'))}</p>
 
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('tas.measured'))} · ${esc(t('common.optional'))}</div>
+        <div style="height:var(--s3)"></div>
+        <div class="grid2">
+          <div class="numfield">
+            <input type="number" inputmode="decimal" step="0.01" min="0" max="5" data-act="tas-tds"
+                   value="${this.tasting.tds_pct ?? ''}" placeholder="${esc(t('tas.tds'))}" style="text-align:left">
+          </div>
+          <div class="numfield">
+            <input type="number" inputmode="numeric" min="0" max="2000" data-act="tas-bev"
+                   value="${this.tasting.beverage_g ?? ''}"
+                   placeholder="${esc(t('tas.beverageEst', {
+                     v: Extraction.estimateBeverage(r.final.water_g, r.final.dose_g) ?? '—' }))}"
+                   style="text-align:left">
+          </div>
+        </div>
+        ${(() => {
+          const bev = this.tasting.beverage_g ?? Extraction.estimateBeverage(r.final.water_g, r.final.dose_g);
+          const ey = Extraction.yield(this.tasting.tds_pct, bev, r.final.dose_g);
+          if (ey == null) return `<p class="dim field__hint">${esc(t('tas.measuredHint'))}</p>`;
+          const z = Extraction.zone(ey, this.tasting.tds_pct);
+          return `<div style="height:var(--s3)"></div>
+            <div class="note">${esc(t('tas.eyResult', { v: ey }))}
+              <span class="zone zone--${z.ext}">${esc(t('an.zone.' + z.ext))}</span></div>`;
+        })()}
+
         ${this.toast ? `<div style="height:var(--s4)"></div><div class="note">${esc(this.toast)}</div>` : ''}
         <div style="height:var(--s8)"></div>
       </div>
@@ -1064,6 +1098,263 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           ${esc(this.tasting.overall ? t('tas.save') : t('tas.needOverall'))}
         </button>
       </div>
+    </div>`;
+  },
+
+  /* ══════════ 분석 (Phase 4) ══════════ */
+
+  /** 꺾은선 하나를 SVG로. 차트 라이브러리를 쓰지 않는 이유는 analysis.js 주석 참조 */
+  chartSvg(label, values, opt = {}) {
+    const W = 300, H = 110, PAD = 10;
+
+    /* 기준선이 있는 차트는 y축이 기준선을 항상 포함하게 넓힙니다.
+       내 수율이 전부 17%대면 데이터 범위가 16.9~17.9라 18% 선이 화면 밖으로 나갑니다.
+       그러면 "내가 적정 구간 아래에 있다"는 가장 중요한 정보가 안 보입니다. */
+    const range = {};
+    if (opt.guides?.length) {
+      const nums = values.filter(v => v != null);
+      if (nums.length) {
+        range.min = Math.min(...nums, ...opt.guides) - 1;
+        range.max = Math.max(...nums, ...opt.guides) + 1;
+      }
+    }
+    const c = Chart.line(values, { w: W, h: H, pad: PAD, ...opt, ...range });
+    if (!c.points.length) {
+      return `<div class="chart">
+        <div class="chart__head"><span class="caption">${esc(label)}</span></div>
+        <p class="dim">${esc(opt.emptyText || t('an.noEy'))}</p>
+      </div>`;
+    }
+
+    const guides = (opt.guides || [])
+      .map(g => Chart.guide(g, { w: W, h: H, pad: PAD, min: c.min, max: c.max }))
+      .filter(Boolean)
+      .map(g => `<path class="chart__guide" d="${g.d}"/>`).join('');
+
+    const fmt = opt.format || (v => v);
+    return `<div class="chart">
+      <div class="chart__head">
+        <span class="caption">${esc(label)}</span>
+        <span class="chart__range">${esc(fmt(c.min))} – ${esc(fmt(c.max))}</span>
+      </div>
+      <svg viewBox="0 0 ${W} ${H + 14}" role="img"
+           aria-label="${esc(label)} ${esc(fmt(c.min))}–${esc(fmt(c.max))}">
+        ${guides}
+        <path class="chart__line" d="${c.d}"/>
+        ${c.points.map(p => `<circle class="chart__dot" cx="${p.x}" cy="${p.y}" r="3.5"/>`).join('')}
+        ${c.points.map(p => `<text class="chart__xlabel" x="${p.x}" y="${H + 10}"
+            text-anchor="middle">${p.i + 1}</text>`).join('')}
+      </svg>
+    </div>`;
+  },
+
+  viewAnalysis() {
+    const logs = this.logs;
+    if (!logs.length) {
+      return `<div class="screen is-active">
+        <header class="topbar">
+          <span class="topbar__title">${esc(t('an.title'))}</span>${this.langSeg()}
+        </header>
+        <div class="scroll pad"><div class="empty">
+          <div class="subtitle">${esc(t('an.empty'))}</div>
+          <div style="height:var(--s2)"></div>
+          <p class="dim">${esc(t('an.emptySub'))}</p>
+        </div></div>
+        ${this.tabbar('logs')}
+      </div>`;
+    }
+
+    const s = Analysis.summary(logs);
+    const counts = Analysis.recipeCounts(logs);
+    const pick = this.analysis.recipeId || counts[0].recipe_id;
+    const series = Analysis.dialIn(logs, pick);
+    const picked = counts.find(c => c.recipe_id === pick) || counts[0];
+
+    const charts = series.length < 2
+      ? `<p class="dim">${esc(t('an.needTwo'))}</p>`
+      : [
+          this.chartSvg(t('an.chartScore'), series.map(x => x.score), { min: 1, max: 5 }),
+          this.chartSvg(t('an.chartTemp'), series.map(x => x.temp), { format: v => `${v}°C` }),
+          this.chartSvg(t('an.chartGrind'), series.map(x => x.grind)),
+          this.chartSvg(t('an.chartEy'), series.map(x => x.ey),
+            { guides: [18, 22], format: v => `${v}%`, emptyText: t('an.noEy') })
+        ].join('');
+
+    const steps = series.map(x => `<div class="tl__item is-done">
+      <div class="tl__row">
+        <span class="tl__time">${esc(t('an.attempt', { n: x.n }))}</span>
+        <span class="tl__name">${x.temp ?? '—'} °C · ${x.grind ?? '—'}</span>
+        <span class="tl__g">${x.score ?? '—'}</span>
+      </div>
+      <div class="tl__sub" style="padding-left:52px">
+        ${x.changed.length
+          ? x.changed.map(d => `${esc(t('diff.' + d.key))} ${d.delta > 0 ? '+' : ''}${d.delta}`).join(' · ')
+          : esc(t('an.noChange'))}
+        ${x.ey != null ? ` · ${x.ey}% <span class="zone zone--${Extraction.zone(x.ey).ext}">${
+          esc(t('an.zone.' + Extraction.zone(x.ey).ext))}</span>` : ''}
+        ${x.next_action ? `<br>→ ${esc(x.next_action)}` : ''}
+      </div>
+    </div>`).join('');
+
+    const freq = Analysis.flavorFrequency(logs);
+    const maxN = freq.length ? freq[0].n : 1;
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('an.title'))}</span>
+        <span style="display:flex;align-items:center;gap:var(--s2)">
+          <button class="topbar__action" data-act="go-logs">${esc(t('log.title'))} ›</button>
+          ${this.langSeg()}
+        </span>
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        <p class="dim">${esc(t('an.sub'))}</p>
+
+        <div style="height:var(--s5)"></div>
+        <div class="caption">${esc(t('an.summary'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="metric-grid">
+          ${[[t('an.total'), s.total], [t('an.thisMonth'), s.thisMonth],
+             [t('an.avg'), s.avgScore ?? '—'], [t('an.best'), s.bestScore ?? '—']]
+            .map(([k, v]) => `<div class="metric-card">
+              <div class="caption">${esc(k)}</div>
+              <div class="metric-card__value"><span class="metric-sm">${esc(v)}</span></div>
+            </div>`).join('')}
+        </div>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('an.pickRecipe'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="filters">${counts.map(c => `
+          <button class="chip" data-act="an-pick" data-v="${esc(c.recipe_id)}"
+                  aria-pressed="${c.recipe_id === pick}">
+            ${esc(c.title?.[I18n.lang] || c.title?.en || c.recipe_id)} · ${esc(t('an.attempts', { n: c.count }))}
+          </button>`).join('')}</div>
+
+        <div style="height:var(--s5)"></div>
+        <div class="caption">${esc(t('an.dialIn'))} · ${esc(t('an.attempts', { n: picked.count }))}</div>
+        <div style="height:var(--s3)"></div>
+        ${charts}
+
+        ${series.length >= 2 ? `
+          <div style="height:var(--s5)"></div>
+          <div class="tl">${steps}</div>` : ''}
+
+        ${freq.length ? `
+          <div style="height:var(--s6)"></div>
+          <div class="caption">${esc(t('an.flavorFreq'))}</div>
+          <div style="height:var(--s3)"></div>
+          ${freq.map(f => {
+            const node = FlavorTree.byId(Data.flavorNodes, f.id);
+            return `<div class="freq">
+              <span class="freq__label">
+                <i class="chip__dot" style="background:${esc(this.nodeColor(node))}"></i>${esc(this.nodeName(node) || f.id)}
+              </span>
+              <span class="freq__bar"><i style="width:${Math.round(f.n / maxN * 100)}%"></i></span>
+              <span class="freq__n">${f.n}</span>
+            </div>`;
+          }).join('')}
+          <div style="height:var(--s2)"></div>
+          <p class="dim">${esc(t('an.flavorFreqHint'))}</p>` : ''}
+
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('logs')}
+    </div>`;
+  },
+
+  /* ══════════ 위키 (Phase 4) ══════════ */
+
+  viewWiki() {
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('wiki.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        <p class="dim">${esc(t('wiki.sub'))}</p>
+        <div style="height:var(--s5)"></div>
+        ${Data.wiki.map(a => {
+          const ti = I18n.prose(a.title), su = I18n.prose(a.summary);
+          return `<button class="wk" data-act="wiki-open" data-id="${esc(a.id)}">
+            <span class="wk__title">${esc(ti?.text || a.id)}</span>
+            <span class="wk__sum">${esc(su?.text || '')}</span>
+          </button>`;
+        }).join('')}
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('wiki')}
+    </div>`;
+  },
+
+  viewWikiDoc() {
+    const a = Data.wiki.find(x => x.id === this.wikiId);
+    if (!a) return this.viewWiki();
+    const ti = I18n.prose(a.title);
+
+    const lang = I18n.lang;
+    const localized = (obj, fb) => {
+      if (!obj) return null;
+      const v = obj[lang] ?? null;
+      if (v != null) return { v, fallback: false };
+      const other = obj[lang === 'ko' ? 'en' : 'ko'];
+      return other != null ? { v: other, fallback: true } : null;
+    };
+
+    const blocks = a.blocks.map(b => {
+      if (b.type === 'heading') {
+        const x = I18n.prose(b.text);
+        return `<h2>${esc(x?.text || '')}</h2>`;
+      }
+      if (b.type === 'para' || b.type === 'note') {
+        const x = I18n.prose(b.text);
+        if (!x) return '';
+        const inner = `${x.isFallback
+          ? `<span class="badge" style="margin-right:6px">ⓘ ${esc(t('fallback.koreanOnly'))}</span>` : ''}${esc(x.text)}`;
+        return b.type === 'note'
+          ? `<div class="note" style="margin-bottom:var(--s4)">${inner}</div>`
+          : `<p>${inner}</p>`;
+      }
+      if (b.type === 'list') {
+        const x = localized(b.items);
+        if (!x) return '';
+        return `<ul>${x.v.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
+      }
+      if (b.type === 'table') {
+        const head = localized(b.head), rows = localized(b.rows);
+        if (!head || !rows) return '';
+        return `<div class="doc__wrap"><table>
+          <thead><tr>${head.v.map(hh => `<th>${esc(hh)}</th>`).join('')}</tr></thead>
+          <tbody>${rows.v.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>`;
+      }
+      if (b.type === 'kv') {
+        return b.items.map(it => {
+          const k = I18n.prose(it.k), v = I18n.prose(it.v);
+          return `<div class="doc__kv">
+            <div class="doc__k">${esc(k?.text || '')}</div>
+            <div class="doc__v">${v?.isFallback
+              ? `<span class="badge" style="margin-right:6px">ⓘ ${esc(t('fallback.koreanOnly'))}</span>` : ''}${esc(v?.text || '')}</div>
+          </div>`;
+        }).join('');
+      }
+      return '';
+    }).join('');
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <button class="topbar__action" data-act="go-wiki">← ${esc(t('wiki.back'))}</button>
+        <span class="topbar__title">${esc(t('wiki.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s5)"></div>
+        <h1 class="title">${esc(ti?.text || a.id)}</h1>
+        <div style="height:var(--s6)"></div>
+        <div class="doc">${blocks}</div>
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('wiki')}
     </div>`;
   },
 
@@ -1539,6 +1830,13 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       result: b.result, plan: b.plan, session: b.session,
       settings: this.settings, rec: this.settings.rec, tasting: this.tasting
     });
+    // 측정값은 선택 입력이라 LogEntry가 아니라 여기서 붙입니다
+    const bev = this.tasting.beverage_g ?? Extraction.estimateBeverage(b.result.final.water_g, b.result.final.dose_g);
+    entry.measured = {
+      tds_pct: this.tasting.tds_pct ?? null,
+      beverage_g: this.tasting.tds_pct != null ? bev : (this.tasting.beverage_g ?? null),
+      beverage_estimated: this.tasting.beverage_g == null
+    };
 
     const res = LogStore.add(entry);
     if (!res.ok) {
@@ -1553,7 +1851,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
   },
 
   resetTasting() {
-    this.tasting = { overall: null, flavor_nodes: [], next_action: '' };
+    this.tasting = { overall: null, flavor_nodes: [], next_action: '', tds_pct: null, beverage_g: null };
     this.toast = null;
   },
 
@@ -1597,7 +1895,11 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
     return `<div class="screen is-active">
       <header class="topbar">
-        <span class="topbar__title">${esc(t('log.title'))}</span>${this.langSeg()}
+        <span class="topbar__title">${esc(t('log.title'))}</span>
+        <span style="display:flex;align-items:center;gap:var(--s2)">
+          ${this.logs.length ? `<button class="topbar__action" data-act="go-analysis">${esc(t('an.title'))} ›</button>` : ''}
+          ${this.langSeg()}
+        </span>
       </header>
       <div class="scroll pad">
         <div style="height:var(--s4)"></div>
@@ -1641,8 +1943,14 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       [t('param.temp'), `${l.planned.temp_c} °C`, '—'],
       [t('param.grind'), g.text, '—'],
       [t('param.dose'), `${l.planned.dose_g} g`, '—'],
-      [t('param.water'), `${l.planned.water_g} g`, '—']
+      [t('param.water'), `${l.planned.water_g} g`, l.measured?.beverage_g ? `${l.measured.beverage_g} g` : '—']
     ];
+    const ey = Extraction.yield(l.measured?.tds_pct, l.measured?.beverage_g, l.planned?.dose_g);
+    if (ey != null) {
+      const z = Extraction.zone(ey, l.measured.tds_pct);
+      vs.push([t('an.chartEy'), `${l.measured.tds_pct} %`,
+               `${ey}% · ${t('an.zone.' + z.ext)}`]);
+    }
 
     const marks = (l.actual.marks || []).map(m =>
       `<div class="tl__item is-done">
@@ -1862,6 +2170,10 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
         case 'go-archive': this.archive.openId = null; this.go('archive'); break;
         case 'go-flavor':  this.flavor.openBean = null; this.go('flavor'); break;
+        case 'go-analysis': this.go('analysis'); break;
+        case 'an-pick':    this.analysis.recipeId = el.dataset.v; this.render(); break;
+        case 'go-wiki':    this.wikiId = null; this.go('wiki'); break;
+        case 'wiki-open':  this.wikiId = el.dataset.id; this.go('wiki-doc'); break;
 
         case 'fl-drill':   this.flavor.drill = el.dataset.v; this.render(); break;
         case 'fl-up': {
@@ -1922,6 +2234,14 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       if (!el) return;
       if (el.dataset.act === 'custom-name') this.patch({ grinder_custom_name: el.value });
       if (el.dataset.act === 'tas-next') this.tasting.next_action = el.value;
+      if (el.dataset.act === 'tas-tds') {
+        const v = el.value.trim();
+        this.tasting.tds_pct = v === '' ? null : Math.max(0, Math.min(5, Number(v)));
+      }
+      if (el.dataset.act === 'tas-bev') {
+        const v = el.value.trim();
+        this.tasting.beverage_g = v === '' ? null : Math.max(0, Math.min(2000, Number(v)));
+      }
       if (el.dataset.act === 'log-file' && el.files?.[0]) this.importLogs(el.files[0]);
       if (el.dataset.act === 'days-input') {
         const v = el.value.trim();

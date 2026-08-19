@@ -592,3 +592,53 @@ a { color:var(--accent); }
 }
 .mini--hit { border-color:var(--accent); color:var(--accent); background:var(--accent-weak); }
 .mini i { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+/* ══════════════════════════════════════════════════════════
+   Phase 4 — 분석 · 위키
+   ══════════════════════════════════════════════════════════ */
+.chart { border:1px solid var(--line); border-radius:var(--radius); padding:var(--s4); background:var(--paper); }
+.chart + .chart { margin-top:var(--s2); }
+.chart__head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s3); }
+.chart__range { font-size:var(--f-caption); color:var(--ink-4); }
+.chart svg { width:100%; height:auto; display:block; overflow:visible; }
+.chart__line { fill:none; stroke:var(--accent); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.chart__dot { fill:var(--paper); stroke:var(--accent); stroke-width:2; }
+.chart__guide { stroke:var(--line-strong); stroke-width:1; stroke-dasharray:3 3; }
+.chart__xlabel { font-size:9px; fill:var(--ink-4); }
+
+.zone { display:inline-block; font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; }
+.zone--ideal { background:var(--accent-weak); color:var(--accent); border:1px solid var(--accent); }
+.zone--under, .zone--over { background:var(--surface); color:var(--warn); border:1px solid var(--warn); }
+
+.freq { display:flex; align-items:center; gap:var(--s3); padding-block:var(--s2); }
+.freq__label { flex:0 0 96px; font-size:var(--f-label); display:flex; align-items:center; gap:6px; }
+:lang(en) .freq__label { flex-basis:110px; }
+.freq__bar { flex:1; height:8px; background:var(--surface); border-radius:4px; overflow:hidden; }
+.freq__bar i { display:block; height:100%; background:var(--accent); border-radius:4px; }
+.freq__n { flex:0 0 24px; text-align:right; font-size:var(--f-label); font-weight:600; }
+
+/* 위키 */
+.wk { display:block; width:100%; text-align:left;
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--s4) var(--s5); background:var(--paper); }
+.wk + .wk { margin-top:var(--s2); }
+.wk__title { font-size:var(--f-body); font-weight:600; line-height:1.4; color:var(--ink); }
+.wk__sum { font-size:var(--f-caption); color:var(--ink-3); margin-top:var(--s2); line-height:1.6; }
+
+.doc h2 { font-size:var(--f-subtitle); font-weight:600; margin:var(--s6) 0 var(--s3); letter-spacing:-.005em; }
+.doc h2:first-child { margin-top:0; }
+.doc p { font-size:var(--f-body); line-height:1.75; color:var(--ink-2); margin-bottom:var(--s3); white-space:pre-line; }
+.doc ul { margin:0 0 var(--s3) var(--s5); }
+.doc li { font-size:var(--f-body); line-height:1.7; color:var(--ink-2); margin-bottom:var(--s2); }
+.doc table { width:100%; border-collapse:collapse; margin-bottom:var(--s4); font-size:var(--f-label); }
+.doc th { text-align:left; font-weight:600; color:var(--ink-3); font-size:var(--f-caption);
+  letter-spacing:.04em; text-transform:uppercase; padding:var(--s2) var(--s2) var(--s2) 0;
+  border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+.doc td { padding:var(--s2) var(--s2) var(--s2) 0; border-bottom:1px solid var(--line);
+  color:var(--ink-2); vertical-align:top; }
+.doc td:first-child { font-weight:600; color:var(--ink); white-space:nowrap; }
+.doc__kv { border-top:1px solid var(--line); padding:var(--s3) 0; }
+.doc__kv:last-child { border-bottom:1px solid var(--line); }
+.doc__k { font-size:var(--f-label); font-weight:600; color:var(--ink); }
+.doc__v { font-size:var(--f-label); color:var(--ink-2); line-height:1.7; margin-top:var(--s1); white-space:pre-line; }
+.doc__wrap { overflow-x:auto; }

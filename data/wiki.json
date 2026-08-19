@@ -1,0 +1,643 @@
+{
+  "_meta": {
+    "schema_version": "0.3",
+    "updated": "2026-08-19",
+    "설명": [
+      "위키 문서를 마크다운이 아니라 구조화된 블록으로 저장합니다.",
+      "마크다운 파서를 직접 쓰면 버그 표면이 늘고, 라이브러리를 쓰면 의존성이 늘어납니다.",
+      "블록 타입: heading | para | list | table | note | kv",
+      "본문 필드는 {ko, en, source_lang} 구조라 번역이 없으면 폴백 배지가 붙습니다."
+    ],
+    "번역_상태": "제목·요약은 전부 이중 언어입니다. 본문 중 일부 문단은 한국어만 있어 영어판에서 폴백 배지가 표시됩니다."
+  },
+  "articles": [
+    {
+      "id": "extraction-basics",
+      "title": {
+        "ko": "추출 수율과 농도",
+        "en": "Extraction yield and strength"
+      },
+      "summary": {
+        "ko": "커피 맛을 숫자로 다루는 두 축입니다. 이 둘을 구분하지 못하면 '연하다'와 '덜 뽑혔다'를 계속 헷갈리게 됩니다.",
+        "en": "The two numbers that describe a cup. Confuse them and you will keep mixing up 'weak' with 'under-extracted'."
+      },
+      "tags": [
+        "theory"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "text": {
+            "ko": "두 가지는 다른 것입니다",
+            "en": "They are not the same thing"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "농도(TDS)는 '물에 녹아 있는 커피 성분의 비율'입니다. 진하냐 연하냐를 말합니다.\n수율(Extraction Yield)은 '원두에서 성분을 몇 %나 뽑아냈느냐'입니다. 덜 뽑혔냐 과하게 뽑혔냐를 말합니다.",
+            "en": "Strength (TDS) is the share of dissolved coffee in the water — how thick or thin it tastes.\nExtraction yield is how much of the ground coffee you actually dissolved — whether it is under or over-extracted."
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "물을 더 붓기만 하면 농도는 낮아지지만 수율은 그대로입니다. 반대로 같은 물량에서 더 곱게 갈면 수율과 농도가 함께 올라갑니다.",
+            "en": "Adding water lowers strength but leaves yield unchanged. Grinding finer at the same water raises both."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "계산",
+            "en": "The formula"
+          }
+        },
+        {
+          "type": "kv",
+          "items": [
+            {
+              "k": {
+                "ko": "수율 %",
+                "en": "Yield %"
+              },
+              "v": {
+                "ko": "TDS % × 추출량(g) ÷ 도징(g)",
+                "en": "TDS % × beverage (g) ÷ dose (g)"
+              }
+            },
+            {
+              "k": {
+                "ko": "추출량 추정",
+                "en": "Estimated beverage"
+              },
+              "v": {
+                "ko": "물량 − 도징 × 2",
+                "en": "Water − dose × 2"
+              }
+            }
+          ]
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "원두는 자기 무게의 약 2배만큼 물을 머금습니다. 저울로 추출량을 직접 재면 더 정확하지만, 안 쟀다면 이 추정으로 충분합니다.",
+            "en": "Grounds retain roughly twice their weight in water. Weighing the beverage is more accurate, but this estimate is fine otherwise."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "참고 구간",
+            "en": "Reference ranges"
+          }
+        },
+        {
+          "type": "table",
+          "head": {
+            "ko": [
+              "구간",
+              "값",
+              "맛"
+            ],
+            "en": [
+              "Range",
+              "Value",
+              "Taste"
+            ]
+          },
+          "rows": {
+            "ko": [
+              [
+                "과소추출",
+                "18% 미만",
+                "시고 짜고 밍밍함. 단맛이 안 나옴"
+              ],
+              [
+                "적정",
+                "18~22%",
+                "단맛이 앞에 서고 산미가 정돈됨"
+              ],
+              [
+                "과다추출",
+                "22% 초과",
+                "쓰고 텁텁함. 후미가 거침"
+              ]
+            ],
+            "en": [
+              [
+                "Under",
+                "below 18%",
+                "Sour, salty, hollow. No sweetness"
+              ],
+              [
+                "Ideal",
+                "18–22%",
+                "Sweetness leads, acidity settles"
+              ],
+              [
+                "Over",
+                "above 22%",
+                "Bitter and drying, rough finish"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "text": {
+            "ko": "이 구간은 절대 기준이 아니라 참고선입니다. 라이트 로스트는 23%에서도 좋고, 다크 로스트는 19%에서도 쓸 수 있습니다. 결국 기준은 내 입입니다.",
+            "en": "These are reference lines, not rules. A light roast can be excellent at 23%; a dark roast can be bitter at 19%. Your palate decides."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "TDS 미터가 없다면",
+            "en": "Without a TDS meter"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "수율을 못 재도 방향은 잡을 수 있습니다. 신맛이 앞서고 단맛이 없으면 덜 뽑힌 쪽, 쓰고 텁텁하면 과하게 뽑힌 쪽입니다.\n덜 뽑혔으면 분쇄를 곱게 하거나 온도를 올리고, 과하면 반대로 갑니다. 한 번에 하나만 바꾸세요.",
+            "en": "You can still find the direction. Sour with no sweetness means under; bitter and drying means over.\nGrind finer or raise the temperature for under-extraction, and the reverse for over. Change one variable at a time."
+          }
+        },
+        {
+          "type": "note",
+          "text": {
+            "ko": "한 번에 하나만 바꾸는 것이 이 앱의 기록 기능이 존재하는 이유입니다. 두 개를 동시에 바꾸면 무엇이 효과를 냈는지 알 수 없습니다.",
+            "en": "Changing one variable at a time is why this app keeps logs. Change two and you cannot tell which one worked."
+          }
+        }
+      ]
+    },
+    {
+      "id": "grind-anchor",
+      "title": {
+        "ko": "분쇄도는 왜 마이크론으로 못 옮기나",
+        "en": "Why grind size does not transfer in microns"
+      },
+      "summary": {
+        "ko": "남의 레시피에 적힌 클릭 수나 마이크론을 내 그라인더에 그대로 옮기면 왜 안 맞는지, 이 앱이 어떻게 처리하는지.",
+        "en": "Why another person's click count or micron figure does not carry over to your grinder, and what this app does instead."
+      },
+      "tags": [
+        "theory",
+        "app"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "text": {
+            "ko": "같은 800µm이 같은 커피가 아닙니다",
+            "en": "800 µm is not 800 µm"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "분쇄도를 마이크론으로 표기하면 그라인더가 달라도 옮길 수 있을 것 같지만, 실제로는 안 됩니다.",
+            "en": "A micron figure looks like it should transfer between grinders. It does not."
+          }
+        },
+        {
+          "type": "list",
+          "items": {
+            "ko": [
+              "버 형상이 다릅니다 — 코니컬은 입도 분포가 넓고, 플랫은 좁습니다",
+              "버 직경이 다릅니다 — 39mm와 64mm는 같은 설정에서도 결과가 다릅니다",
+              "제로 포인트를 잡는 방법이 제조사마다 다릅니다",
+              "표기 자체가 실측이 아니라 추정인 경우가 많습니다"
+            ],
+            "en": [
+              "Burr shape differs — conical spreads the particle distribution wider than flat",
+              "Burr diameter differs — 39 mm and 64 mm behave differently at the same setting",
+              "Manufacturers zero their grinders differently",
+              "The published figure is often an estimate rather than a measurement"
+            ]
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "플랫 버는 코니컬보다 입도가 균일해서, 중위 입도가 같아도 추출이 더 강하게 나옵니다. 마이크론 숫자가 같아도 잔은 다릅니다.",
+            "en": "Flat burrs produce a narrower distribution, so at the same median size they extract more strongly. Same number, different cup."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "이 앱이 쓰는 방식 — 앵커와 밴드",
+            "en": "How this app handles it — anchor and bands"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "절대값을 옮기는 대신, 각자의 기준점에서 몇 칸인지로 다룹니다.",
+            "en": "Instead of transferring an absolute value, we work in steps from your own reference point."
+          }
+        },
+        {
+          "type": "list",
+          "items": {
+            "ko": [
+              "온보딩에서 'V60로 내릴 때 평소 쓰는 세팅'을 묻습니다. 이것이 밴드 0, 즉 앵커입니다",
+              "레시피는 앵커로부터의 오프셋(밴드)으로 저장됩니다. 예: +2밴드 = 앵커보다 두 칸 굵게",
+              "화면에는 내 그라인더의 실제 클릭 수로 환산해 보여줍니다"
+            ],
+            "en": [
+              "Onboarding asks for the setting you normally use on a V60. That becomes band 0, your anchor",
+              "Recipes store an offset from the anchor. For example +2 means two steps coarser than your anchor",
+              "The screen converts that into your own grinder's clicks"
+            ]
+          }
+        },
+        {
+          "type": "table",
+          "head": {
+            "ko": [
+              "그라인더",
+              "앵커",
+              "1밴드",
+              "+2밴드 표시"
+            ],
+            "en": [
+              "Grinder",
+              "Anchor",
+              "1 band",
+              "Shown at +2"
+            ]
+          },
+          "rows": {
+            "ko": [
+              [
+                "Comandante C40",
+                "25클릭",
+                "2클릭",
+                "29클릭"
+              ],
+              [
+                "Timemore C3",
+                "20클릭",
+                "2클릭",
+                "24클릭"
+              ],
+              [
+                "1Zpresso J-Max",
+                "90클릭",
+                "7클릭",
+                "104클릭 (3회전 +14)"
+              ],
+              [
+                "Fellow Ode Gen2",
+                "4번",
+                "1스텝",
+                "6번"
+              ]
+            ],
+            "en": [
+              [
+                "Comandante C40",
+                "25 clicks",
+                "2 clicks",
+                "29 clicks"
+              ],
+              [
+                "Timemore C3",
+                "20 clicks",
+                "2 clicks",
+                "24 clicks"
+              ],
+              [
+                "1Zpresso J-Max",
+                "90 clicks",
+                "7 clicks",
+                "104 clicks (3 turns +14)"
+              ],
+              [
+                "Fellow Ode Gen2",
+                "4",
+                "1 step",
+                "6"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "text": {
+            "ko": "이 방식의 진짜 이점은 카탈로그에 없는 그라인더도 지원된다는 점입니다. 기준점만 직접 입력하면 나머지는 전부 계산됩니다.",
+            "en": "The real benefit is that grinders missing from the catalogue still work. Enter your own anchor and everything else follows."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "앵커를 어떻게 정하나",
+            "en": "Setting your anchor"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "정답이 있는 값이 아닙니다. 지금 V60로 내릴 때 쓰는 세팅을 그대로 넣으세요.\n기록이 쌓이면서 '내 앵커가 한 칸 굵었구나' 싶으면 설정에서 조정하면 됩니다. 그러면 모든 레시피가 함께 보정됩니다.",
+            "en": "There is no correct value. Enter whatever you currently use on a V60.\nOnce you have some logs you may find your anchor was a step off — adjust it in settings and every recipe shifts with it."
+          }
+        }
+      ]
+    },
+    {
+      "id": "roast-and-parameters",
+      "title": {
+        "ko": "로스팅 정도에 따라 무엇을 바꾸나",
+        "en": "Adjusting parameters to roast level"
+      },
+      "summary": {
+        "ko": "같은 레시피를 라이트와 풀시티에 그대로 쓰면 한쪽은 시고 한쪽은 탑니다. 무엇을 얼마나 바꿔야 하는지.",
+        "en": "Using one recipe for both light and full city leaves one sour and the other burnt. What to change, and by how much."
+      },
+      "tags": [
+        "theory"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "text": {
+            "ko": "왜 달라지나",
+            "en": "Why it changes"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "로스팅이 진행될수록 원두 세포 구조가 더 부서지기 쉬워집니다. 같은 조건이면 다크 로스트가 성분을 훨씬 빨리 내놓습니다.\n그래서 라이트는 더 강하게 뽑아야 하고, 다크는 덜 뽑아야 합니다. 온도·분쇄·교반이 모두 그 방향으로 움직입니다.",
+            "en": null,
+            "source_lang": "ko"
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "기준선",
+            "en": "Baseline"
+          }
+        },
+        {
+          "type": "table",
+          "head": {
+            "ko": [
+              "로스팅",
+              "온도",
+              "분쇄",
+              "비율",
+              "교반"
+            ],
+            "en": [
+              "Roast",
+              "Temp",
+              "Grind",
+              "Ratio",
+              "Agitation"
+            ]
+          },
+          "rows": {
+            "ko": [
+              [
+                "라이트",
+                "93~96°C",
+                "곱게",
+                "1:15~1:16",
+                "강하게"
+              ],
+              [
+                "라이트 미디엄",
+                "92~94°C",
+                "약간 곱게",
+                "1:16",
+                "중강"
+              ],
+              [
+                "미디엄",
+                "90~93°C",
+                "중간",
+                "1:16",
+                "보통"
+              ],
+              [
+                "미디엄 다크",
+                "88~91°C",
+                "약간 굵게",
+                "1:16~1:17",
+                "약하게"
+              ],
+              [
+                "풀시티",
+                "87~90°C",
+                "중간-굵게",
+                "1:16~1:17",
+                "약하게"
+              ],
+              [
+                "다크",
+                "83~88°C",
+                "굵게",
+                "1:17~1:18",
+                "최소"
+              ]
+            ],
+            "en": [
+              [
+                "Light",
+                "93–96 °C",
+                "Fine",
+                "1:15–1:16",
+                "Strong"
+              ],
+              [
+                "Light-Medium",
+                "92–94 °C",
+                "Slightly fine",
+                "1:16",
+                "Medium-strong"
+              ],
+              [
+                "Medium",
+                "90–93 °C",
+                "Medium",
+                "1:16",
+                "Medium"
+              ],
+              [
+                "Medium-Dark",
+                "88–91 °C",
+                "Slightly coarse",
+                "1:16–1:17",
+                "Gentle"
+              ],
+              [
+                "Full City",
+                "87–90 °C",
+                "Medium-coarse",
+                "1:16–1:17",
+                "Gentle"
+              ],
+              [
+                "Dark",
+                "83–88 °C",
+                "Coarse",
+                "1:17–1:18",
+                "Minimal"
+              ]
+            ]
+          }
+        },
+        {
+          "type": "note",
+          "text": {
+            "ko": "이 앱의 추천 엔진이 쓰는 기준선이 정확히 이 표입니다. 레시피가 겨냥한 로스팅과 내 원두가 다르면 온도를 이 대역으로 당기고 분쇄를 조정합니다.",
+            "en": "This table is exactly what the recommendation engine uses. When your roast differs from the recipe's target, the temperature is pulled into this band and the grind shifts."
+          }
+        },
+        {
+          "type": "heading",
+          "text": {
+            "ko": "로스팅 경과일",
+            "en": "Days off roast"
+          }
+        },
+        {
+          "type": "para",
+          "text": {
+            "ko": "갓 볶은 원두는 이산화탄소가 많아 물을 밀어냅니다. 블룸이 크게 부풀고 물이 고르게 스미지 않습니다.\n3일 이내면 블룸을 10초쯤 더 주고, 3주가 넘으면 추출이 잘 안 되니 온도를 1~2도 올리세요.",
+            "en": null,
+            "source_lang": "ko"
+          }
+        }
+      ]
+    },
+    {
+      "id": "glossary",
+      "title": {
+        "ko": "용어집",
+        "en": "Glossary"
+      },
+      "summary": {
+        "ko": "이 앱과 커피 자료에서 자주 나오는 용어.",
+        "en": "Terms that come up in this app and in coffee writing."
+      },
+      "tags": [
+        "reference"
+      ],
+      "blocks": [
+        {
+          "type": "kv",
+          "items": [
+            {
+              "k": {
+                "ko": "블룸 (Bloom)",
+                "en": "Bloom"
+              },
+              "v": {
+                "ko": "첫 물을 붓고 가스를 빼는 단계. 갓 볶은 원두일수록 크게 부풉니다.",
+                "en": "The first pour, which lets CO2 escape. Fresher coffee swells more."
+              }
+            },
+            {
+              "k": {
+                "ko": "드로우다운 (Drawdown)",
+                "en": "Drawdown"
+              },
+              "v": {
+                "ko": "마지막 푸어 후 물이 다 빠지는 구간. 이 시간이 길면 과추출 신호일 수 있습니다.",
+                "en": "The stretch after the last pour while the water drains. A long drawdown can signal over-extraction."
+              }
+            },
+            {
+              "k": {
+                "ko": "바이패스 (Bypass)",
+                "en": "Bypass"
+              },
+              "v": {
+                "ko": "추출한 커피에 뜨거운 물을 더해 농도를 낮추는 것. 수율은 그대로 두고 농도만 조절합니다.",
+                "en": "Adding hot water to the finished cup. Lowers strength while leaving yield unchanged."
+              }
+            },
+            {
+              "k": {
+                "ko": "교반 (Agitation)",
+                "en": "Agitation"
+              },
+              "v": {
+                "ko": "젓거나 스월링해 물과 가루를 섞는 것. 늘리면 수율이 올라갑니다.",
+                "en": "Stirring or swirling to mix water and grounds. More agitation raises yield."
+              }
+            },
+            {
+              "k": {
+                "ko": "채널링 (Channeling)",
+                "en": "Channeling"
+              },
+              "v": {
+                "ko": "물이 한쪽으로만 흐르는 현상. 어떤 가루는 과추출, 어떤 가루는 과소추출됩니다.",
+                "en": "Water finding one path through the bed. Some grounds over-extract while others barely extract."
+              }
+            },
+            {
+              "k": {
+                "ko": "TDS",
+                "en": "TDS"
+              },
+              "v": {
+                "ko": "Total Dissolved Solids. 물에 녹은 커피 성분의 비율(%). 농도를 나타냅니다.",
+                "en": "Total Dissolved Solids — the percentage of dissolved coffee. This is strength."
+              }
+            },
+            {
+              "k": {
+                "ko": "수율 (EY)",
+                "en": "Extraction Yield"
+              },
+              "v": {
+                "ko": "원두에서 뽑아낸 성분의 비율(%). 18~22%를 참고 구간으로 봅니다.",
+                "en": "The percentage of the grounds you dissolved. 18–22% is the usual reference range."
+              }
+            },
+            {
+              "k": {
+                "ko": "워시드 / 내추럴 / 허니",
+                "en": "Washed / Natural / Honey"
+              },
+              "v": {
+                "ko": "가공 방식. 워시드는 깔끔하고 산미가 또렷, 내추럴은 과일향이 강하고, 허니는 그 중간입니다.",
+                "en": "Processing methods. Washed is clean with clear acidity, natural is fruit-forward, honey sits between."
+              }
+            },
+            {
+              "k": {
+                "ko": "앵커 / 밴드",
+                "en": "Anchor / Band"
+              },
+              "v": {
+                "ko": "이 앱의 분쇄도 표기 방식. 내 V60 기준 세팅이 앵커(밴드 0)이고, 레시피는 거기서 몇 칸인지로 표시됩니다.",
+                "en": "This app's grind notation. Your usual V60 setting is the anchor (band 0); recipes are shown as steps from there."
+              }
+            },
+            {
+              "k": {
+                "ko": "유속 (Flow rate)",
+                "en": "Flow rate"
+              },
+              "v": {
+                "ko": "드리퍼가 물을 빼내는 속도. 빠른 드리퍼로 옮기면 접촉 시간이 줄어 분쇄를 곱게 해야 합니다.",
+                "en": "How fast a brewer drains. Moving to a faster brewer shortens contact time, so grind finer."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

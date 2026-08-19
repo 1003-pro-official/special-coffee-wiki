@@ -24,6 +24,7 @@ eval(strip(fs.readFileSync('assets/engine.js','utf-8'))+'\n;Object.assign(global
 eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
 eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(strip(fs.readFileSync('assets/flavor.js','utf-8'))+'\n;Object.assign(globalThis,{FlavorTree,Wheel});');
+eval(strip(fs.readFileSync('assets/analysis.js','utf-8'))+'\n;Object.assign(globalThis,{Extraction,Analysis,Chart});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
@@ -294,6 +295,83 @@ console.log('\n[Phase 3 — 플레이버 탐색]');
   ok(App.results && App.results.length===Data.recipes.length, '추천 결과 생성');
   const top=App.results.filter(r=>r.fit!=='mismatch')[0];
   ok(top && top.score>=60, `구지 내추럴 1위 ${top.recipe.id} ${top.score}점`);
+}
+
+console.log('\n[Phase 4 — 분석 · 위키]');
+{
+  // 로그 없을 때
+  LogStore.clear(); App.logs=[]; App.page='analysis';
+  let h=App.viewAnalysis();
+  ok(h.includes('empty')&&!h.includes('undefined'), '기록 없을 때 빈 화면');
+
+  // 같은 레시피 3회 기록을 만들어 다이얼인 확인
+  const mk=(at,temp,grind,score,tds)=>({
+    id:'L'+at, brewed_at:at, recipe_id:'kasuya-46',
+    recipe_title:{ko:'카스야 4:6',en:'Kasuya 4:6'},
+    planned:{temp_c:temp,grind_setting:grind,dose_g:20,water_g:300,total_time_s:210},
+    actual:{total_time_s:212,marks:[]}, bean:{roast_level:'light',process:'washed'},
+    sensory:{overall:score}, flavor_nodes:['floral','fruity'],
+    measured: tds?{tds_pct:tds,beverage_g:260}:{}, next_action:'분쇄 더 곱게' });
+  LogStore.save([mk('2026-08-14T00:00:00Z',94,18,5,1.38),
+                 mk('2026-08-12T00:00:00Z',95,20,4,1.30),
+                 mk('2026-08-10T00:00:00Z',96,22,3,null)]);
+  App.logs=LogStore.all();
+  App.analysis={recipeId:null};
+  h=App.viewAnalysis();
+  ok(h.length>2000&&!h.includes('undefined')&&!h.includes('NaN'), `분석 화면 (${h.length}자)`);
+  ok((h.match(/chart__line/g)||[]).length>=3, '차트 3개 이상 렌더');
+  ok(h.includes('chart__guide'), '수율 기준선(18/22%) 표시');
+  ok(h.includes('zone--'), '추출 구간 배지');
+  ok(h.includes('freq__bar'), '향미 빈도 막대');
+
+  const ser=Analysis.dialIn(App.logs,'kasuya-46');
+  ok(ser.length===3 && ser[0].n===1, `다이얼인 3회차 (${ser.map(x=>x.score).join('→')})`);
+  ok(ser[2].ey===17.9, `3회차 수율 ${ser[2].ey}%`);
+  ok(ser[0].ey===null, '측정값 없는 회차는 수율 null');
+
+  // 레시피 선택
+  App.analysis.recipeId='kasuya-46';
+  ok(!App.viewAnalysis().includes('undefined'), '레시피 선택 후 렌더');
+
+  // 1건뿐인 레시피
+  LogStore.save([mk('2026-08-14T00:00:00Z',94,18,5,null)]);
+  App.logs=LogStore.all(); App.analysis={recipeId:null};
+  ok(App.viewAnalysis().includes('an.needTwo')===false, '1건이면 안내 문구 (키 노출 안 됨)');
+
+  // 위키
+  ok(Data.wiki.length===4, `위키 문서 ${Data.wiki.length}편`);
+  App.page='wiki';
+  h=App.viewWiki();
+  ok(h.length>500&&!h.includes('undefined'), `위키 목록 (${h.length}자)`);
+  let bad=[];
+  for(const a of Data.wiki){
+    App.wikiId=a.id;
+    try{ const d=App.viewWikiDoc();
+      if(d.includes('undefined')||d.includes('NaN')||d.includes('[object')) bad.push(a.id); }
+    catch(e){ bad.push(`${a.id}: ${e.message}`); }
+  }
+  ok(bad.length===0, bad.join(' / ')||`위키 ${Data.wiki.length}편 전부 렌더`);
+
+  App.wikiId='grind-anchor';
+  const doc=App.viewWikiDoc();
+  ok(doc.includes('<table>'), '표 블록 렌더');
+  ok(doc.includes('<ul>'), '목록 블록 렌더');
+  ok(doc.includes('class="note"'), '노트 블록 렌더');
+  App.wikiId='glossary';
+  ok(App.viewWikiDoc().includes('doc__kv'), '용어집 kv 블록 렌더');
+}
+
+console.log('\n[Phase 4 — 위키 폴백]');
+{
+  await Data.loadDict('en'); I18n.setLang('en');
+  App.wikiId='roast-and-parameters';
+  const d=App.viewWikiDoc();
+  ok(d.includes('Korean only'), '영어 미번역 문단에 폴백 배지');
+  App.wikiId='grind-anchor';
+  const d2=App.viewWikiDoc();
+  ok(!d2.includes('Korean only'), '완전 번역 문서에는 배지 없음');
+  ok(d2.includes('Comandante'), '표 내용이 영어로');
+  await Data.loadDict('ko'); I18n.setLang('ko');
 }
 
 console.log('\n[영어 — 로그 화면]');
