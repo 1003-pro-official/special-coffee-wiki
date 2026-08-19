@@ -3,9 +3,13 @@
 
    Phase 1a  데이터 로딩 · 온보딩 · 다국어
    Phase 1b  추천 입력 · 추천 결과
+   Phase 1c  추출 가이드
+   Phase 1d  테이스팅 입력 · 브루잉 로그
 
-   순수 로직(Grind · Score · Convert · Engine)은 engine.js에 있습니다.
-   이 파일은 화면과 이벤트만 다룹니다.
+   순수 로직은 별도 파일에 있습니다 — 이 파일은 화면과 이벤트만 다룹니다.
+     engine.js  Grind · Score · Convert · Engine
+     brew.js    BrewPlan · Alerts · WakeLock · BrewSession
+     logs.js    LogEntry · LogStore
    ══════════════════════════════════════════════════════════ */
 'use strict';
 
@@ -176,7 +180,7 @@ const Data = {
    ──────────────────────────────────────────── */
 const App = {
   settings: null,
-  page: 'home',   // home | recommend | results | brew-prep | brew | brew-done
+  page: 'home',   // home | recommend | results | brew-prep | brew | brew-done | logs | log-detail
   onboardStep: 1,
   showAllBrewers: false,
   showAllGrinders: false,
@@ -185,12 +189,19 @@ const App = {
   // Phase 1c — 추출 세션
   brew: { result: null, plan: null, session: null, sound: true, wake: false, wakeFailed: false },
 
+  // Phase 1d — 테이스팅 입력 / 로그
+  tasting: { overall: null, flavor_nodes: [], next_action: '' },
+  logs: [],
+  logDetailId: null,
+  toast: null,
+
   async init() {
     this.settings = Store.load();
     I18n.setLang(this.settings.lang || I18n.detect());
     this.applyTheme();
     try { await Data.loadAll(I18n.lang); }
     catch (err) { this.renderError(err); return; }
+    this.logs = LogStore.all();
     this.render();
   },
 
@@ -222,6 +233,8 @@ const App = {
     else if (this.page === 'brew-prep')  root.innerHTML = this.viewBrewPrep();
     else if (this.page === 'brew')       root.innerHTML = this.viewBrew();
     else if (this.page === 'brew-done')  root.innerHTML = this.viewBrewDone();
+    else if (this.page === 'logs')       root.innerHTML = this.viewLogs();
+    else if (this.page === 'log-detail') root.innerHTML = this.viewLogDetail();
     else                                 root.innerHTML = this.viewHome();
     root.scrollTop = 0;
     this.bind(root);
@@ -488,16 +501,22 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         <button class="btn btn--ghost" data-act="reset">${esc(t('settings.reset'))}</button>
         <div style="height:var(--s8)"></div>
       </div>
-      ${this.tabbar()}
+      ${this.tabbar('brew')}
     </div>`;
   },
 
-  tabbar() {
-    return `<nav class="tabbar">${
-      [['☕','tab.brew'],['🔍','tab.explore'],['📓','tab.log'],['📖','tab.wiki']].map(([ic, k], i) =>
-        `<button class="tabbar__item" ${i === 0 ? 'aria-current="page"' : ''}>
-           <span class="tabbar__icon">${ic}</span><span class="tabbar__label">${esc(t(k))}</span>
-         </button>`).join('')}</nav>`;
+  tabbar(active = 'brew') {
+    const items = [
+      ['☕', 'tab.brew',    'brew',    'go-home'],
+      ['🔍', 'tab.explore', 'explore', null],      // Phase 3
+      ['📓', 'tab.log',     'logs',    'go-logs'],
+      ['📖', 'tab.wiki',    'wiki',    null]       // Phase 4
+    ];
+    return `<nav class="tabbar">${items.map(([ic, k, id, act]) =>
+      `<button class="tabbar__item" ${id === active ? 'aria-current="page"' : ''}
+               ${act ? `data-act="${act}"` : 'disabled style="opacity:.45"'}>
+         <span class="tabbar__icon">${ic}</span><span class="tabbar__label">${esc(t(k))}</span>
+       </button>`).join('')}</nav>`;
   },
 
   /* ══════════ 추천 입력 ══════════ */
@@ -610,7 +629,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           ${bad.map(r => this.card(r, false)).join('')}` : ''}
         <div style="height:var(--s8)"></div>
       </div>
-      ${this.tabbar()}
+      ${this.tabbar('brew')}
     </div>`;
   },
 
@@ -817,7 +836,11 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
   viewBrew() {
     const b = this.brew;
     if (!b.result) return this.viewHome();
-    const last = null;   // Phase 1d에서 직전 로그의 next_action을 여기에 띄웁니다
+    // 학습 루프를 닫는 지점 — 직전 기록에서 "다음에 바꿀 것"을 물려받아 띄웁니다
+    const prev = LogEntry.findPrevious(this.logs, {
+      recipeId: b.result.recipe.id, roastLevel: this.settings.rec.roast_level
+    });
+    const last = prev?.next_action || null;
 
     return `<div class="screen is-active brew">
       <div class="brew__top">
@@ -833,7 +856,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       </div>
 
       ${last ? `<div class="brew__memo">
-        <div class="caption">${esc(t('brew.lastNote'))}</div>
+        <div class="caption">${esc(t('brew.prevNote'))}</div>
         <div style="font-size:var(--f-label);color:var(--ink-2);margin-top:3px">${esc(last)}</div>
       </div>` : ''}
 
@@ -978,15 +1001,281 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         <div style="height:var(--s2)"></div>
         <div class="tl">${marks}</div>
 
+        <div style="height:var(--s8)"></div>
+        <div class="hr"></div>
         <div style="height:var(--s6)"></div>
-        <div class="note">${esc(t('brew.done.logSoon'))}</div>
+
+        <h2 class="title">${esc(t('tas.title'))}</h2>
+        <div style="height:var(--s2)"></div>
+        <p class="dim">${esc(t('tas.sub'))}</p>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('tas.overall'))} · ${esc(t('common.required'))}</div>
+        <div style="height:var(--s3)"></div>
+        <div class="rate">${[1, 2, 3, 4, 5].map(v =>
+          `<button data-act="tas-overall" data-v="${v}" aria-pressed="${this.tasting.overall === v}">${v}</button>`
+        ).join('')}</div>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('tas.flavor'))}</div>
+        <div style="height:var(--s3)"></div>
+        ${this.chips(Data.families().map(f => ({
+            value: f.id, label: f.name[I18n.lang] || f.name.en, color: f.color
+          })), this.tasting.flavor_nodes, 'tas-flavor', true)}
+        <p class="dim field__hint">${esc(t('tas.flavorHint'))}</p>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('tas.next'))}</div>
+        <div style="height:var(--s3)"></div>
+        <textarea class="textarea" rows="2" data-act="tas-next"
+                  placeholder="${esc(t('tas.nextPh'))}">${esc(this.tasting.next_action)}</textarea>
+        <p class="dim field__hint">${esc(t('tas.nextHint'))}</p>
+
+        ${this.toast ? `<div style="height:var(--s4)"></div><div class="note">${esc(this.toast)}</div>` : ''}
         <div style="height:var(--s8)"></div>
       </div>
       <div class="footer-actions">
-        <button class="btn btn--secondary" data-act="brew-again">${esc(t('brew.done.again'))}</button>
-        <button class="btn" data-act="go-home">${esc(t('brew.done.home'))}</button>
+        <button class="btn btn--secondary" data-act="tas-skip">${esc(t('tas.skip'))}</button>
+        <button class="btn" data-act="tas-save" ${this.tasting.overall ? '' : 'disabled'}>
+          ${esc(this.tasting.overall ? t('tas.save') : t('tas.needOverall'))}
+        </button>
       </div>
     </div>`;
+  },
+
+  /* ══════════ 브루잉 로그 (Phase 1d) ══════════ */
+
+  saveLog() {
+    const b = this.brew;
+    if (!b.result || !b.session) return;
+
+    const entry = LogEntry.build({
+      result: b.result, plan: b.plan, session: b.session,
+      settings: this.settings, rec: this.settings.rec, tasting: this.tasting
+    });
+
+    const res = LogStore.add(entry);
+    if (!res.ok) {
+      // 조용히 실패하면 사용자가 기록을 잃은 줄 모릅니다
+      this.toast = res.reason === 'quota' ? t('tas.quotaFull') : t('tas.saveFailed');
+      this.render();
+      return;
+    }
+    this.logs = LogStore.all();
+    this.resetTasting();
+    this.go('logs');
+  },
+
+  resetTasting() {
+    this.tasting = { overall: null, flavor_nodes: [], next_action: '' };
+    this.toast = null;
+  },
+
+  logDate(iso) {
+    const d = new Date(iso);
+    return I18n.lang === 'ko'
+      ? `${d.getMonth() + 1}/${d.getDate()}`
+      : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  },
+
+  logTitle(l) {
+    const ti = l.recipe_title || {};
+    return ti[I18n.lang] || ti.en || ti.ko || l.recipe_id;
+  },
+
+  viewLogs() {
+    const rows = this.logs.map((l, i) => {
+      // 목록에서 다이얼인 과정을 스크롤만으로 읽히게 하는 부분
+      const prev = this.logs.slice(i + 1).find(p => p.recipe_id === l.recipe_id);
+      const diff = LogEntry.diff(l, prev);
+      const g = this.fmtGrind(Data.byId.grinder[l.gear.grinder_id], l.planned.grind_setting);
+
+      return `<button class="log" data-act="log-open" data-id="${esc(l.id)}">
+        <span class="log__date">${esc(this.logDate(l.brewed_at))}</span>
+        <span class="log__body">
+          <span class="log__name">${esc(this.logTitle(l))}</span>
+          <span class="log__params">${esc([
+            Data.brewerName(Data.byId.brewer[l.gear.brewer_id]),
+            `${l.planned.temp_c} °C`,
+            g.text,
+            BrewPlan.mmss(l.actual.total_time_s)
+          ].join(' · '))}</span>
+          ${diff.length ? `<span class="log__diff">${diff.map(d =>
+            `<span>${esc(t('diff.' + d.key))} ${d.delta > 0 ? '+' : ''}${d.delta}${d.unit ? esc(d.unit) : ''}</span>`
+          ).join('')}</span>` : ''}
+          ${l.next_action ? `<span class="log__next">→ ${esc(l.next_action)}</span>` : ''}
+        </span>
+        <span class="log__score metric-sm">${l.sensory.overall ?? '—'}</span>
+      </button>`;
+    }).join('');
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('log.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        ${this.toast ? `<div class="note">${esc(this.toast)}</div><div style="height:var(--s4)"></div>` : ''}
+
+        ${this.logs.length ? `
+          <div class="caption">${esc(t('log.count', { n: this.logs.length }))}</div>
+          <div style="height:var(--s2)"></div>
+          ${rows}
+        ` : `<div class="empty">
+              <div class="subtitle">${esc(t('log.empty'))}</div>
+              <div style="height:var(--s2)"></div>
+              <p class="dim">${esc(t('log.emptySub'))}</p>
+            </div>`}
+
+        <div style="height:var(--s8)"></div>
+        <div class="filerow">
+          <button class="btn btn--secondary" data-act="log-export" ${this.logs.length ? '' : 'disabled'}>
+            ${esc(t('log.export'))}
+          </button>
+          <button class="btn btn--secondary" data-act="log-import">${esc(t('log.import'))}</button>
+        </div>
+        <input type="file" accept="application/json,.json" id="logFile" class="hidden" data-act="log-file">
+        <div style="height:var(--s4)"></div>
+        <p class="dim">${esc(t('log.backupNote'))}</p>
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('logs')}
+    </div>`;
+  },
+
+  viewLogDetail() {
+    const l = this.logs.find(x => x.id === this.logDetailId);
+    if (!l) return this.viewLogs();
+
+    const g = this.fmtGrind(Data.byId.grinder[l.gear.grinder_id], l.planned.grind_setting);
+    const attempt = LogEntry.attemptNumber(this.logs, l.recipe_id, l.brewed_at);
+
+    const vs = [
+      [t('param.time'), BrewPlan.mmss(l.planned.total_time_s), BrewPlan.mmss(l.actual.total_time_s)],
+      [t('param.temp'), `${l.planned.temp_c} °C`, '—'],
+      [t('param.grind'), g.text, '—'],
+      [t('param.dose'), `${l.planned.dose_g} g`, '—'],
+      [t('param.water'), `${l.planned.water_g} g`, '—']
+    ];
+
+    const marks = (l.actual.marks || []).map(m =>
+      `<div class="tl__item is-done">
+        <div class="tl__row">
+          <span class="tl__time">${esc(BrewPlan.mmss(m.at_s))}</span>
+          <span class="tl__name">${esc(t('rec.steps'))} ${m.index + 1}</span>
+          <span class="tl__delta">${esc(m.auto ? t('brew.done.auto') : t('brew.done.manual'))}</span>
+        </div>
+      </div>`).join('');
+
+    const flavors = (l.flavor_nodes || []).map(id => {
+      const n = Data.byId.flavor[id];
+      return n ? `<span class="chip" style="pointer-events:none">
+        <i class="chip__dot" style="background:${esc(n.color || 'var(--ink-4)')}"></i>${esc(n.name[I18n.lang] || n.name.en)}
+      </span>` : '';
+    }).join('');
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <button class="topbar__action" data-act="go-logs">← ${esc(t('common.back'))}</button>
+        <span class="topbar__title">${esc(t('log.detail'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s5)"></div>
+        <h1 class="title">${esc(this.logTitle(l))}</h1>
+        <div style="height:var(--s2)"></div>
+        <p class="dim">${esc(new Date(l.brewed_at).toLocaleString(I18n.lang === 'ko' ? 'ko-KR' : 'en-US'))}
+          · ${esc(t('log.attempt', { n: attempt }))}</p>
+
+        <div style="height:var(--s6)"></div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="caption">${esc(t('tas.overall'))}</div>
+            <div class="metric-card__value"><span class="metric">${l.sensory.overall ?? '—'}</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="caption">${esc(t('log.actual'))}</div>
+            <div class="metric-card__value"><span class="metric-sm">${esc(BrewPlan.mmss(l.actual.total_time_s))}</span></div>
+          </div>
+        </div>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('log.vs'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="vs__row">
+          <span class="vs__label vs__head"></span>
+          <span class="vs__planned vs__head">${esc(t('log.planned'))}</span>
+          <span class="vs__actual vs__head">${esc(t('log.actual'))}</span>
+        </div>
+        ${vs.map(([k, p, a]) => `<div class="vs__row">
+          <span class="vs__label">${esc(k)}</span>
+          <span class="vs__planned">${esc(p)}</span>
+          <span class="vs__actual">${esc(a)}</span>
+        </div>`).join('')}
+
+        ${flavors ? `
+          <div style="height:var(--s6)"></div>
+          <div class="caption">${esc(t('tas.flavor'))}</div>
+          <div style="height:var(--s3)"></div>
+          <div class="chipset">${flavors}</div>` : ''}
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('tas.next'))}</div>
+        <div style="height:var(--s2)"></div>
+        <p class="bod">${esc(l.next_action || t('log.noNext'))}</p>
+
+        ${marks ? `
+          <div style="height:var(--s6)"></div>
+          <div class="caption">${esc(t('log.marks'))}</div>
+          <div style="height:var(--s2)"></div>
+          <div class="tl">${marks}</div>` : ''}
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('log.beanCond'))}</div>
+        <div class="row"><span class="row__label">${esc(t('rec.roast'))}</span>
+          <span class="row__value">${esc(term('roast_level', l.bean.roast_level))}</span></div>
+        <div class="row"><span class="row__label">${esc(t('rec.process'))}</span>
+          <span class="row__value">${esc(l.bean.process ? term('process', l.bean.process) : '—')}</span></div>
+        <div class="row"><span class="row__label">${esc(t('rec.daysOffRoast'))}</span>
+          <span class="row__value">${l.bean.days_off_roast ?? '—'}</span></div>
+
+        <div style="height:var(--s8)"></div>
+        <button class="btn btn--ghost" data-act="log-delete" data-id="${esc(l.id)}"
+                style="color:var(--danger)">${esc(t('log.delete'))}</button>
+        <div style="height:var(--s8)"></div>
+      </div>
+    </div>`;
+  },
+
+  exportLogs() {
+    const payload = LogStore.exportPayload(this.logs);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = LogStore.filename();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+
+  importLogs(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let payload;
+      try { payload = JSON.parse(reader.result); }
+      catch (e) { this.toast = t('log.importFailed'); this.render(); return; }
+
+      const res = LogStore.importPayload(payload, this.logs);
+      if (!res.ok) { this.toast = t('log.importFailed'); this.render(); return; }
+
+      const saved = LogStore.save(res.merged);
+      if (!saved.ok) {
+        this.toast = saved.reason === 'quota' ? t('tas.quotaFull') : t('tas.saveFailed');
+      } else {
+        this.logs = LogStore.all();
+        this.toast = t('log.imported', { added: res.added, skipped: res.skipped });
+      }
+      this.render();
+    };
+    reader.readAsText(file);
   },
 
   /** 보정 사유의 코드값을 사람이 읽는 표시명으로 바꿉니다 */
@@ -1076,7 +1365,26 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           el.textContent = `${this.brew.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
           break;
         }
-        case 'brew-again':  this.openBrew(this.brew.result.recipe.id); break;
+        case 'brew-again':  this.resetTasting(); this.openBrew(this.brew.result.recipe.id); break;
+
+        case 'tas-overall': this.tasting.overall = Number(el.dataset.v); this.render(); break;
+        case 'tas-flavor':
+          this.tasting.flavor_nodes = toggle(this.tasting.flavor_nodes, el.dataset.v);
+          this.render(); break;
+        case 'tas-save': this.saveLog(); break;
+        case 'tas-skip': this.resetTasting(); this.go('home'); break;
+
+        case 'go-logs':   this.toast = null; this.go('logs'); break;
+        case 'log-open':  this.logDetailId = el.dataset.id; this.go('log-detail'); break;
+        case 'log-export': this.exportLogs(); break;
+        case 'log-import': document.getElementById('logFile')?.click(); break;
+        case 'log-delete':
+          if (confirm(t('log.deleteConfirm'))) {
+            LogStore.remove(el.dataset.id);
+            this.logs = LogStore.all();
+            this.go('logs');
+          }
+          break;
 
         case 'reset':
           if (confirm(t('settings.resetConfirm'))) {
@@ -1090,10 +1398,17 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       }
     });
 
+    root.addEventListener('change', (e) => {
+      const el = e.target.closest('[data-act="log-file"]');
+      if (el && el.files?.[0]) this.importLogs(el.files[0]);
+    });
+
     root.addEventListener('input', (e) => {
       const el = e.target.closest('[data-act]');
       if (!el) return;
       if (el.dataset.act === 'custom-name') this.patch({ grinder_custom_name: el.value });
+      if (el.dataset.act === 'tas-next') this.tasting.next_action = el.value;
+      if (el.dataset.act === 'log-file' && el.files?.[0]) this.importLogs(el.files[0]);
       if (el.dataset.act === 'days-input') {
         const v = el.value.trim();
         this.patchRec({ days_off_roast: v === '' ? null : Math.max(0, Math.min(365, Number(v))) });

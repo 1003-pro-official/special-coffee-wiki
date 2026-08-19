@@ -1,7 +1,11 @@
 import fs from 'fs';
 const mem={};
 let rafQ=[];
+globalThis.Blob=class{constructor(){}};
+globalThis.URL={createObjectURL:()=>'blob:x',revokeObjectURL(){}};
+globalThis.FileReader=class{readAsText(){}};
 globalThis.document={documentElement:{lang:'',setAttribute(){},removeAttribute(){}},
+  createElement:()=>({href:'',download:'',click(){},remove(){},style:{}}), body:{appendChild(){}},
   getElementById:()=>({innerHTML:'',textContent:'',scrollTop:0,style:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},setAttribute(){},removeAttribute(){},dataset:{}}),
   querySelector:()=>null, querySelectorAll:()=>[],
   addEventListener:()=>{}};
@@ -18,6 +22,7 @@ const warn=[]; const _w=console.warn; console.warn=(...a)=>{warn.push(a.join(' '
 const strip=s=>s.replace(/if \(typeof module[\s\S]*$/,'');
 eval(strip(fs.readFileSync('assets/engine.js','utf-8'))+'\n;Object.assign(globalThis,{Grind,Score,Convert,Engine});');
 eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
+eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
@@ -114,6 +119,69 @@ await Data.loadDict('ko'); I18n.setLang('ko');
 console.log('\n[i18n 누락 키]');
 const missing=warn.filter(w=>w.includes('누락 키'));
 ok(missing.length===0, missing.join(' / ')||'없음');
+
+console.log('\n[Phase 1d — 전체 루프]');
+{
+  LogStore.clear();
+  App.logs = [];
+  App.openBrew(top);
+
+  // 세션을 만들어 완료 상태로
+  const realNow=Date.now; let fake=2000000; Date.now=()=>fake;
+  const sess=new BrewSession(App.brew.plan,()=>{});
+  sess.start(); fake+=212000; sess.finished=true;
+  App.brew.session=sess; Date.now=realNow;
+
+  App.page='brew-done';
+  App.tasting={overall:null,flavor_nodes:[],next_action:''};
+  let h=App.viewBrewDone();
+  ok(h.includes('disabled'), '종합 평가 전에는 저장 버튼 비활성');
+
+  App.tasting={overall:4,flavor_nodes:['floral','fruity'],next_action:'온도 1도 낮추고 마지막 푸어 20g 줄이기'};
+  h=App.viewBrewDone();
+  ok(!h.includes('undefined')&&!h.includes('NaN'), `테이스팅 폼 (${h.length}자)`);
+
+  App.saveLog();
+  ok(App.page==='logs', `저장 후 로그 화면으로 (${App.page})`);
+  ok(App.logs.length===1, `로그 1건 (${App.logs.length})`);
+  ok(App.tasting.overall===null, '테이스팅 입력 초기화');
+
+  const list=App.viewLogs();
+  ok(list.length>500&&!list.includes('undefined'), `로그 목록 (${list.length}자)`);
+  ok(list.includes('온도 1도 낮추고'), '목록에 next_action 표시');
+
+  App.logDetailId=App.logs[0].id;
+  const det=App.viewLogDetail();
+  ok(det.length>500&&!det.includes('undefined')&&!det.includes('NaN'), `로그 상세 (${det.length}자)`);
+  ok(det.includes('3:32')||det.includes('3:3'), '실제 시간 표시');
+
+  // 학습 루프가 닫히는지 — 다음 추출 화면에 직전 메모가 뜨는가
+  App.openBrew(top);
+  App.page='brew';
+  const bh=App.viewBrew();
+  ok(bh.includes('온도 1도 낮추고'), '다음 추출 화면에 지난 메모가 승계됨');
+
+  // 두 번째 기록 → 목록에 diff 표시
+  App.brew.session=sess;
+  App.tasting={overall:5,flavor_nodes:['floral'],next_action:'좋았음'};
+  App.saveLog();
+  const list2=App.viewLogs();
+  ok(App.logs.length===2, `로그 2건 (${App.logs.length})`);
+
+  // 빈 목록 화면
+  LogStore.clear(); App.logs=[];
+  const empty=App.viewLogs();
+  ok(!empty.includes('undefined'), '빈 로그 화면 렌더');
+}
+
+console.log('\n[영어 — 로그 화면]');
+{
+  await Data.loadDict('en'); I18n.setLang('en');
+  App.logs=[]; const e1=App.viewLogs();
+  const kk=[...new Set((e1.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
+  ok(kk.length===0, '영어 로그 화면에 한글 없음'+(kk.length?` → ${JSON.stringify(kk)}`:''));
+  await Data.loadDict('ko'); I18n.setLang('ko');
+}
 
 console.log(fail?`\n★ 실패 ${fail}/${n}`:`\n전체 통과 ${n}건`);
 process.exit(fail?1:0);
