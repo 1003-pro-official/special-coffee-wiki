@@ -1,0 +1,749 @@
+{
+  "_meta": {
+    "schema_version": "0.3",
+    "updated": "2026-08-19",
+    "entry_type": [
+      "origin_profile — 산지별 일반 프로파일입니다. 특정 로스터의 제품이 아닙니다.",
+      "actual — 실제로 구매해 마신 원두. 로스터명·로스팅일·평점을 포함합니다. (아직 없음)"
+    ],
+    "왜_산지_프로파일부터인가": [
+      "특정 로스터 제품을 임의로 만들어 넣으면 없는 컵노트와 없는 점수를 지어내게 됩니다.",
+      "대신 '에티오피아 내추럴은 대체로 이런 향이 난다'는 산지 수준의 일반 지식만 담았습니다.",
+      "실제 원두는 마시면서 entry_type: 'actual'로 하나씩 추가하는 것이 맞습니다.",
+      "브루잉 힌트는 각 프로파일의 구조적 특성(고도·가공·품종)에서 나오는 것만 적었습니다."
+    ],
+    "컵노트_표기": [
+      "flavor_nodes는 flavor-nodes.json의 id만 씁니다.",
+      "SCA 휠에 없는 국내 통용 표기(블랙커런트, 리치 등)는 가장 가까운 노드로 매핑합니다.",
+      "예: 블랙커런트 → fruity.berry.blackberry"
+    ]
+  },
+  "beans": [
+    {
+      "id": "origin-et-yirgacheffe-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "에티오피아 예가체프 (워시드)",
+        "en": "Ethiopia Yirgacheffe (Washed)"
+      },
+      "origin": {
+        "country": "ET",
+        "region": {
+          "ko": "예가체프",
+          "en": "Yirgacheffe"
+        },
+        "altitude_m": [
+          1800,
+          2200
+        ]
+      },
+      "variety": [
+        "heirloom"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light",
+        "light-medium"
+      ],
+      "flavor_nodes": [
+        "floral.floral.jasmine",
+        "fruity.citrus_fruit.lemon",
+        "floral.black_tea",
+        "sweet.brown_sugar.honey"
+      ],
+      "profile_note": {
+        "ko": "워시드 에티오피아의 기준점 같은 프로파일입니다. 꽃향과 밝은 감귤 산미가 앞에 서고 바디는 가볍습니다.",
+        "en": "The reference point for washed Ethiopian coffee. Florals and bright citrus lead, with a light body.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "가벼운 바디를 살리려면 온도를 높이고(94~96°C) 분쇄를 곱게 가세요. 굵게 갈면 향만 날아가고 밍밍해집니다.",
+        "en": "Keep the temperature high (94–96 °C) and the grind fine to support the light body. Too coarse and the aromatics thin out.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-et-guji-natural",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "에티오피아 구지 (내추럴)",
+        "en": "Ethiopia Guji (Natural)"
+      },
+      "origin": {
+        "country": "ET",
+        "region": {
+          "ko": "구지",
+          "en": "Guji"
+        },
+        "altitude_m": [
+          1900,
+          2300
+        ]
+      },
+      "variety": [
+        "heirloom"
+      ],
+      "process": "natural",
+      "typical_roast_levels": [
+        "light",
+        "light-medium"
+      ],
+      "flavor_nodes": [
+        "fruity.berry.blueberry",
+        "fruity.berry.strawberry",
+        "floral.floral.jasmine",
+        "sweet.brown_sugar",
+        "sour_fermented.alcohol_fermented.winey"
+      ],
+      "profile_note": {
+        "ko": "내추럴 가공 특유의 베리향이 강하게 나옵니다. 잘 만든 것은 블루베리가 또렷하고, 과발효되면 술 냄새로 넘어갑니다.",
+        "en": "Natural processing pushes berry notes forward. Done well the blueberry is distinct; over-fermented it tips into boozy.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "과일향이 날아가기 쉬워 교반을 약하게 가져가세요. 침지 계열(Switch, Clever)에서 특히 안정적입니다.",
+        "en": "The fruit is fragile, so keep agitation gentle. Immersion brewers like the Switch or Clever hold it especially well.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-ke-kirinyaga-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "케냐 키리냐가 (워시드)",
+        "en": "Kenya Kirinyaga (Washed)"
+      },
+      "origin": {
+        "country": "KE",
+        "region": {
+          "ko": "키리냐가",
+          "en": "Kirinyaga"
+        },
+        "altitude_m": [
+          1600,
+          1900
+        ]
+      },
+      "variety": [
+        "sl28",
+        "sl34",
+        "ruiru11"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light",
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "fruity.berry.blackberry",
+        "sour_fermented.sour.citric_acid",
+        "sour_fermented.alcohol_fermented.winey",
+        "fruity.citrus_fruit.grapefruit",
+        "sweet.brown_sugar"
+      ],
+      "profile_note": {
+        "ko": "SL28 특유의 강한 산미와 진한 바디가 함께 옵니다. 국내에서 흔히 쓰는 '블랙커런트'라는 표현이 이 계열입니다.",
+        "en": "SL28 brings sharp acidity together with a dense body. The 'blackcurrant' note often quoted for Kenyans lives here.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "산미가 날카롭게 튈 수 있어 온도를 1~2°C 낮추면 균형이 잡힙니다. 물의 미네랄이 높으면 더 거칠어집니다.",
+        "en": "The acidity can spike, so dropping 1–2 °C helps balance. High-mineral water makes it harsher still.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-pa-geisha-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "파나마 게이샤 (워시드)",
+        "en": "Panama Geisha (Washed)"
+      },
+      "origin": {
+        "country": "PA",
+        "region": {
+          "ko": "보케테 · 볼칸",
+          "en": "Boquete · Volcán"
+        },
+        "altitude_m": [
+          1500,
+          1900
+        ]
+      },
+      "variety": [
+        "geisha"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light"
+      ],
+      "flavor_nodes": [
+        "floral.floral.jasmine",
+        "floral.black_tea",
+        "fruity.other_fruit.peach",
+        "sweet.brown_sugar.honey",
+        "fruity.citrus_fruit.orange"
+      ],
+      "profile_note": {
+        "ko": "대회에서 가장 많이 쓰이는 품종입니다. 자스민과 홍차 같은 향이 특징이고 바디는 아주 가볍습니다.",
+        "en": "The variety that dominates competition. Jasmine and black tea aromatics with a very light body.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "비싸고 실수 여지가 적습니다. 처음이면 익숙한 레시피로 한 번 뽑아 기준을 잡은 뒤 조정하세요.",
+        "en": "Expensive and unforgiving. Brew it once with a recipe you know to set a baseline before adjusting.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-co-huila-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "콜롬비아 우일라 (워시드)",
+        "en": "Colombia Huila (Washed)"
+      },
+      "origin": {
+        "country": "CO",
+        "region": {
+          "ko": "우일라",
+          "en": "Huila"
+        },
+        "altitude_m": [
+          1500,
+          1900
+        ]
+      },
+      "variety": [
+        "caturra",
+        "castillo",
+        "colombia"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "sweet.brown_sugar.caramelized",
+        "nutty_cocoa.cocoa.chocolate",
+        "fruity.other_fruit.apple",
+        "sour_fermented.sour.malic_acid",
+        "nutty_cocoa.nutty.almond"
+      ],
+      "profile_note": {
+        "ko": "단맛과 산미의 균형이 좋아 무난합니다. 로스팅 정도에 따라 사과 산미에서 초콜릿 단맛까지 폭이 넓습니다.",
+        "en": "A balanced sweetness-to-acidity ratio makes this an easy coffee. Roast level swings it from apple acidity to chocolate sweetness.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "어떤 레시피로도 크게 실패하지 않습니다. 새 드리퍼나 새 레시피를 시험할 때 기준 원두로 쓰기 좋습니다.",
+        "en": "Hard to ruin with any recipe. A good control coffee when testing a new brewer or method.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-co-anaerobic",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "콜롬비아 무산소 발효",
+        "en": "Colombia Anaerobic"
+      },
+      "origin": {
+        "country": "CO",
+        "region": {
+          "ko": "우일라 · 톨리마",
+          "en": "Huila · Tolima"
+        },
+        "altitude_m": [
+          1700,
+          2000
+        ]
+      },
+      "variety": [
+        "caturra",
+        "pink-bourbon"
+      ],
+      "process": "anaerobic",
+      "typical_roast_levels": [
+        "light",
+        "light-medium"
+      ],
+      "flavor_nodes": [
+        "sour_fermented.alcohol_fermented.fermented",
+        "fruity.berry.strawberry",
+        "sweet.vanilla",
+        "sour_fermented.alcohol_fermented.winey",
+        "spices.brown_spice"
+      ],
+      "profile_note": {
+        "ko": "발효 개입이 큰 만큼 향이 강하게 튀어나옵니다. 호불호가 갈리고, 로스터마다 편차도 큽니다.",
+        "en": "Heavy fermentation pushes aromatics hard. Divisive, and the variation between roasters is large.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "향이 과하다고 느끼면 물을 조금 늘려(1:17) 농도를 낮춰보세요. 발효향은 농도에 비례해 강해집니다.",
+        "en": "If the aromatics feel excessive, dilute a little (1:17). Fermented notes scale with strength.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-br-cerrado-natural",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "브라질 세라도 (내추럴)",
+        "en": "Brazil Cerrado (Natural)"
+      },
+      "origin": {
+        "country": "BR",
+        "region": {
+          "ko": "세라도 미네이루",
+          "en": "Cerrado Mineiro"
+        },
+        "altitude_m": [
+          900,
+          1250
+        ]
+      },
+      "variety": [
+        "yellow-bourbon",
+        "mundo-novo",
+        "catuai"
+      ],
+      "process": "natural",
+      "typical_roast_levels": [
+        "medium",
+        "medium-dark",
+        "full-city"
+      ],
+      "flavor_nodes": [
+        "nutty_cocoa.nutty.peanut",
+        "nutty_cocoa.cocoa.chocolate",
+        "sweet.brown_sugar.caramelized",
+        "roasted.cereal.malt",
+        "nutty_cocoa.nutty.hazelnut"
+      ],
+      "profile_note": {
+        "ko": "고도가 낮아 산미가 약하고 견과·초콜릿 계열이 중심입니다. 국내 블렌드의 베이스로 가장 많이 쓰입니다.",
+        "en": "Low altitude means little acidity; nut and chocolate dominate. The most common base in blends.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "중볶음 이상이 많아 온도를 낮게(87~90°C) 잡고 분쇄를 굵게 가야 탄맛이 안 납니다.",
+        "en": "Usually roasted medium or darker, so keep the temperature low (87–90 °C) and the grind coarse to avoid burnt notes.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-gt-antigua-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "과테말라 안티구아 (워시드)",
+        "en": "Guatemala Antigua (Washed)"
+      },
+      "origin": {
+        "country": "GT",
+        "region": {
+          "ko": "안티구아",
+          "en": "Antigua"
+        },
+        "altitude_m": [
+          1500,
+          1700
+        ]
+      },
+      "variety": [
+        "bourbon",
+        "caturra",
+        "catuai"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "nutty_cocoa.cocoa.chocolate",
+        "spices.brown_spice",
+        "sweet.brown_sugar.caramelized",
+        "fruity.other_fruit.apple",
+        "nutty_cocoa.nutty.almond"
+      ],
+      "profile_note": {
+        "ko": "화산토 지역 특유의 묵직한 바디와 향신료 뉘앙스가 있습니다. 초콜릿 단맛이 바탕에 깔립니다.",
+        "en": "Volcanic soil gives a heavy body with a spiced edge over a chocolate base.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "바디가 강점이라 플랫 베드(칼리타)에서 특히 잘 나옵니다. V60에서는 물을 조금 줄여 농도를 올려보세요.",
+        "en": "The body is the strength, so flat-bottom brewers suit it. On a V60, cut the water slightly to raise strength.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-cr-tarrazu-honey",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "코스타리카 따라주 (허니)",
+        "en": "Costa Rica Tarrazú (Honey)"
+      },
+      "origin": {
+        "country": "CR",
+        "region": {
+          "ko": "따라주",
+          "en": "Tarrazú"
+        },
+        "altitude_m": [
+          1400,
+          1900
+        ]
+      },
+      "variety": [
+        "caturra",
+        "catuai",
+        "villa-sarchi"
+      ],
+      "process": "honey",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "sweet.brown_sugar.honey",
+        "fruity.other_fruit.peach",
+        "sweet.brown_sugar.molasses",
+        "nutty_cocoa.nutty.almond",
+        "fruity.citrus_fruit.orange"
+      ],
+      "profile_note": {
+        "ko": "허니 가공이라 단맛이 두껍고 산미는 부드럽습니다. 워시드와 내추럴의 중간쯤에 있습니다.",
+        "en": "Honey processing thickens sweetness and softens acidity — between washed and natural.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "단맛이 강점이라 접촉 시간을 조금 늘리면 더 살아납니다. 푸어 간격을 5초씩 늘려보세요.",
+        "en": "Sweetness is the strength, so a little more contact time helps. Try adding five seconds to each pour interval.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-id-sumatra-wethulled",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "인도네시아 수마트라 (웻 헐드)",
+        "en": "Indonesia Sumatra (Wet-Hulled)"
+      },
+      "origin": {
+        "country": "ID",
+        "region": {
+          "ko": "가요 · 만델링",
+          "en": "Gayo · Mandheling"
+        },
+        "altitude_m": [
+          1100,
+          1600
+        ]
+      },
+      "variety": [
+        "ateng",
+        "typica",
+        "catimor"
+      ],
+      "process": "wet-hulled",
+      "typical_roast_levels": [
+        "medium",
+        "medium-dark",
+        "full-city",
+        "dark"
+      ],
+      "flavor_nodes": [
+        "green_vegetative.green_vegetative",
+        "spices.brown_spice",
+        "roasted.tobacco",
+        "nutty_cocoa.cocoa.dark_chocolate",
+        "other.papery_musty"
+      ],
+      "profile_note": {
+        "ko": "웻 헐드 특유의 흙내음과 허브 뉘앙스가 있습니다. 산미가 거의 없고 바디가 매우 두껍습니다.",
+        "en": "Wet-hulling gives earthy, herbal character with almost no acidity and a very heavy body.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "호불호가 큰 프로파일입니다. 브루잉보다 침지나 프렌치프레스가 어울리고, 굵게 갈아 낮은 온도로 뽑으세요.",
+        "en": "A polarizing profile. Immersion suits it better than pour over — grind coarse and brew cool.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-rw-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "르완다 (워시드)",
+        "en": "Rwanda (Washed)"
+      },
+      "origin": {
+        "country": "RW",
+        "region": {
+          "ko": "후예 · 니아마샤",
+          "en": "Huye · Nyamasheke"
+        },
+        "altitude_m": [
+          1600,
+          2000
+        ]
+      },
+      "variety": [
+        "red-bourbon"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light",
+        "light-medium"
+      ],
+      "flavor_nodes": [
+        "floral.floral.rose",
+        "fruity.berry.raspberry",
+        "sweet.brown_sugar.honey",
+        "sour_fermented.sour.citric_acid",
+        "floral.black_tea"
+      ],
+      "profile_note": {
+        "ko": "레드 버번 특유의 꽃향과 붉은 과일이 나옵니다. 에티오피아보다 단정하고 케냐보다 부드럽습니다.",
+        "en": "Red Bourbon brings florals and red fruit — tidier than Ethiopian, gentler than Kenyan.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "섬세한 향이 강점이라 과추출에 약합니다. 총 시간을 3분 안쪽으로 짧게 가져가세요.",
+        "en": "The delicate aromatics suffer from over-extraction. Keep the total time under three minutes.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-bi-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "부룬디 (워시드)",
+        "en": "Burundi (Washed)"
+      },
+      "origin": {
+        "country": "BI",
+        "region": {
+          "ko": "카얀자 · 응고지",
+          "en": "Kayanza · Ngozi"
+        },
+        "altitude_m": [
+          1700,
+          2000
+        ]
+      },
+      "variety": [
+        "red-bourbon"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light",
+        "light-medium"
+      ],
+      "flavor_nodes": [
+        "fruity.citrus_fruit.grapefruit",
+        "floral.floral.jasmine",
+        "sweet.brown_sugar",
+        "sour_fermented.sour.malic_acid",
+        "fruity.other_fruit.grape"
+      ],
+      "profile_note": {
+        "ko": "르완다와 비슷하지만 감귤 산미가 더 앞에 섭니다. 가격 대비 품질이 좋은 편입니다.",
+        "en": "Similar to Rwanda but with citrus acidity further forward. Strong value for the price.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "산미를 살리려면 라이트하게 볶은 것을 높은 온도로 빠르게 뽑는 편이 낫습니다.",
+        "en": "To keep the acidity, take a light roast hot and fast.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-sv-pacamara-natural",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "엘살바도르 파카마라 (내추럴)",
+        "en": "El Salvador Pacamara (Natural)"
+      },
+      "origin": {
+        "country": "SV",
+        "region": {
+          "ko": "아파네카 · 산타아나",
+          "en": "Apaneca · Santa Ana"
+        },
+        "altitude_m": [
+          1400,
+          1800
+        ]
+      },
+      "variety": [
+        "pacamara"
+      ],
+      "process": "natural",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "fruity.other_fruit.pineapple",
+        "sweet.brown_sugar.molasses",
+        "nutty_cocoa.cocoa.chocolate",
+        "spices.brown_spice",
+        "fruity.dried_fruit.raisin"
+      ],
+      "profile_note": {
+        "ko": "콩이 매우 큰 품종이라 분쇄 균일도가 떨어지기 쉽습니다. 열대 과일과 당밀 단맛이 특징입니다.",
+        "en": "The beans are unusually large, so grind uniformity suffers. Tropical fruit and molasses sweetness stand out.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "콩이 커서 같은 클릭 수에서도 더 굵게 갈립니다. 평소보다 1밴드 곱게 잡고 시작하세요.",
+        "en": "The large beans grind coarser at the same setting. Start one band finer than usual.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-hn-washed",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "온두라스 (워시드)",
+        "en": "Honduras (Washed)"
+      },
+      "origin": {
+        "country": "HN",
+        "region": {
+          "ko": "마르칼라 · 산타바르바라",
+          "en": "Marcala · Santa Bárbara"
+        },
+        "altitude_m": [
+          1300,
+          1700
+        ]
+      },
+      "variety": [
+        "catuai",
+        "bourbon",
+        "parainema"
+      ],
+      "process": "washed",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium",
+        "medium-dark"
+      ],
+      "flavor_nodes": [
+        "nutty_cocoa.nutty.hazelnut",
+        "sweet.brown_sugar.caramelized",
+        "nutty_cocoa.cocoa.chocolate",
+        "fruity.dried_fruit.raisin",
+        "sweet.vanilla"
+      ],
+      "profile_note": {
+        "ko": "가격 대비 안정적인 중미 프로파일입니다. 견과와 캐러멜 단맛이 중심이고 산미는 온화합니다.",
+        "en": "A dependable Central American profile for the price — nut and caramel sweetness with mild acidity.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "특별히 까다롭지 않습니다. 표준 레시피 그대로 시작해도 무리가 없습니다.",
+        "en": "Not fussy. Any standard recipe works as a starting point.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-in-monsooned-malabar",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "인도 몬순 말라바르",
+        "en": "India Monsooned Malabar"
+      },
+      "origin": {
+        "country": "IN",
+        "region": {
+          "ko": "말라바르 해안",
+          "en": "Malabar Coast"
+        },
+        "altitude_m": [
+          1000,
+          1500
+        ]
+      },
+      "variety": [
+        "kent",
+        "s795"
+      ],
+      "process": "wet-hulled",
+      "typical_roast_levels": [
+        "medium",
+        "medium-dark",
+        "full-city"
+      ],
+      "flavor_nodes": [
+        "spices.pepper",
+        "spices.brown_spice",
+        "roasted.tobacco",
+        "nutty_cocoa.cocoa.dark_chocolate",
+        "green_vegetative.green_vegetative"
+      ],
+      "profile_note": {
+        "ko": "몬순 바람에 노출시켜 산미를 거의 없앤 독특한 가공입니다. 후추와 향신료 뉘앙스가 강합니다.",
+        "en": "Exposed to monsoon winds until acidity is nearly gone. Pepper and spice dominate.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "산미가 없어 밸런스를 잡기 어렵습니다. 블렌드 재료로 쓰거나 에스프레소 쪽이 더 맞습니다.",
+        "en": "With no acidity, balance is hard. Better as a blend component or for espresso.",
+        "source_lang": "ko"
+      }
+    },
+    {
+      "id": "origin-ye-natural",
+      "entry_type": "origin_profile",
+      "name": {
+        "ko": "예멘 (내추럴)",
+        "en": "Yemen (Natural)"
+      },
+      "origin": {
+        "country": "YE",
+        "region": {
+          "ko": "바니 마타르 · 하라즈",
+          "en": "Bani Matar · Haraz"
+        },
+        "altitude_m": [
+          1500,
+          2200
+        ]
+      },
+      "variety": [
+        "typica",
+        "udaini",
+        "dawairi"
+      ],
+      "process": "natural",
+      "typical_roast_levels": [
+        "light-medium",
+        "medium"
+      ],
+      "flavor_nodes": [
+        "fruity.dried_fruit.raisin",
+        "spices.brown_spice",
+        "sour_fermented.alcohol_fermented.winey",
+        "nutty_cocoa.cocoa.dark_chocolate",
+        "fruity.dried_fruit.prune"
+      ],
+      "profile_note": {
+        "ko": "건조한 고산 환경에서 나온 야생적인 프로파일입니다. 건과일과 향신료가 겹치고 편차가 큽니다.",
+        "en": "A wild profile from a dry, high-altitude environment. Dried fruit layered with spice, and highly variable.",
+        "source_lang": "ko"
+      },
+      "brewing_hint": {
+        "ko": "로트마다 편차가 커서 한 번 뽑아보고 조정하는 수밖에 없습니다. 로그를 남겨두면 특히 도움이 됩니다.",
+        "en": "Lot-to-lot variation is large, so brew once and adjust. Keeping a log pays off here more than usual.",
+        "source_lang": "ko"
+      }
+    }
+  ]
+}

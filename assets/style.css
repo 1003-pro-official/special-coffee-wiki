@@ -552,3 +552,43 @@ a { color:var(--accent); }
 
 .src { font-size:var(--f-caption); line-height:1.7; word-break:break-all; }
 .src a { color:var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   Phase 3 — 플레이버 탐색
+   모바일에서 3중 링 110노드는 터치 타깃이 성립하지 않습니다.
+   대분류 9개만 원형으로, 하위는 칩으로 드릴다운합니다.
+   ══════════════════════════════════════════════════════════ */
+.wheel { display:flex; justify-content:center; padding:var(--s2) 0 var(--s4); }
+.wheel svg { max-width:100%; height:auto; }
+.wheel__sector { cursor:pointer; transition:opacity .12s; }
+.wheel__sector:hover { opacity:.85; }
+.wheel__label { pointer-events:none; font-weight:600; font-size:10px; }
+.wheel__center-cap { font-size:10px; font-weight:600; letter-spacing:.06em; }
+.wheel__center-n { font-size:19px; font-weight:600; }
+
+.drill { border:1px solid var(--line); border-radius:var(--radius); padding:var(--s4); }
+.drill__head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s3); }
+.drill__crumb { display:flex; align-items:center; gap:6px; font-size:var(--f-label); font-weight:600; }
+.drill__crumb i { width:8px; height:8px; border-radius:50%; }
+.drill__sep { color:var(--ink-4); }
+
+.mode { display:inline-flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+.mode button { min-width:48px; min-height:32px; font-size:11px; font-weight:600; color:var(--ink-3); }
+.mode button[aria-pressed="true"] { background:var(--accent); color:var(--paper); }
+
+.bean {
+  display:block; width:100%; text-align:left;
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--s4) var(--s5); background:var(--paper);
+}
+.bean + .bean { margin-top:var(--s2); }
+.bean__name { font-size:var(--f-body); font-weight:600; line-height:1.4; color:var(--ink); }
+.bean__meta { font-size:var(--f-caption); color:var(--ink-3); margin-top:var(--s1); line-height:1.5; }
+.bean__tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:var(--s2); }
+.mini {
+  font-size:10px; font-weight:600; padding:3px 8px; border-radius:10px;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink-2);
+  display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+}
+.mini--hit { border-color:var(--accent); color:var(--accent); background:var(--accent-weak); }
+.mini i { width:6px; height:6px; border-radius:50%; flex-shrink:0; }

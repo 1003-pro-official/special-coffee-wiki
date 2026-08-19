@@ -9,7 +9,7 @@
 
 ## 현재 상태
 
-**Phase 2 완료** — 추천 → 추출 → 기록 흐름에 챔피언 레시피 아카이브가 붙었습니다.
+**Phase 3 완료** — 향미로 원두를 찾고, 그 원두에 맞는 레시피로 바로 이어집니다.
 
 | 구분 | 상태 |
 |---|---|
@@ -22,6 +22,7 @@
 | **앱 — 추출 가이드** | **동작** — `assets/brew.js` |
 | **앱 — 브루잉 로그** | **동작** — `assets/logs.js` |
 | **앱 — 레시피 아카이브** | **동작** — 필터 · 세로 타임라인 |
+| **앱 — 플레이버 탐색** | **동작** — `assets/flavor.js` |
 
 ---
 
@@ -51,12 +52,14 @@ assets/
   ├─ engine.js          Grind · Score · Convert · Engine  (DOM 의존 없음)
   ├─ brew.js            BrewPlan · Alerts · WakeLock · BrewSession
   ├─ logs.js            LogEntry · LogStore
+  ├─ flavor.js          FlavorTree · Wheel
   └─ app.js             Store · I18n · Data · App        (화면·이벤트)
 data/
   ├─ brewers.json       드리퍼 17
   ├─ grinders.json      그라인더 21 + 앵커
   ├─ flavor-nodes.json  향미 용어 83
   ├─ recipes.json       레시피 15
+  ├─ beans.json         원두 프로파일 16
   └─ i18n/
       ├─ ko.json        UI 문자열 (한국어)
       ├─ en.json        UI 문자열 (영어)
@@ -65,7 +68,8 @@ test/
   ├─ engine.test.mjs    추천 엔진 43건
   ├─ brew.test.mjs      추출 타임라인 44건
   ├─ logs.test.mjs      로그 저장 · 내보내기 44건
-  └─ ui.smoke.mjs       화면 렌더 · 전체 루프 48건
+  ├─ flavor.test.mjs    향미 계층 · 휠 좌표 41건
+  └─ ui.smoke.mjs       화면 렌더 · 전체 루프 69건
 docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 절차
 ```
 
@@ -75,7 +79,8 @@ docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 
 node test/engine.test.mjs   # 추천 엔진 43건
 node test/brew.test.mjs     # 추출 타임라인 44건
 node test/logs.test.mjs     # 로그 저장 · 내보내기 44건
-node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 48건
+node test/flavor.test.mjs   # 향미 계층 · 휠 좌표 41건
+node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 69건
 ```
 
 `engine.js`와 `brew.js`에는 DOM 의존이 없어 Node에서 그대로 돌아갑니다.
@@ -92,14 +97,14 @@ node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 48건
 | [`data/grinders.json`](data/grinders.json) | 그라인더 카탈로그 + 분쇄도 앵커 | 21 |
 | [`data/flavor-nodes.json`](data/flavor-nodes.json) | 향미 용어 계층 (L1 9 · L2 28 · L3 46) | 83 |
 | [`data/recipes.json`](data/recipes.json) | 표준 8 + 챔피언 7 (2018~2025) | 15 |
-| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 242 |
+| [`data/beans.json`](data/beans.json) | 산지 프로파일 | 16 |
+| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 269 |
 | [`data/i18n/terms.json`](data/i18n/terms.json) | 열거형 코드 사전 | 14종 |
 
-미작성: `data/beans.json`
 
 ---
 
-## 핵심 설계 여섯 가지
+## 핵심 설계 일곱 가지
 
 ### 1. 분쇄도 — 마이크론이 아니라 앵커 + 밴드
 
@@ -178,7 +183,23 @@ rAF는 화면을 다시 그리는 용도로만 씁니다.
 "다음엔 온도 1도 낮추기"를 적어두면, 같은 레시피나 같은 로스팅 정도로
 다시 추출할 때 타이머 화면 맨 위에 자동으로 뜹니다.
 
-### 6. 다국어 — 번역 비용을 3층으로 나눈다
+### 6. 원두는 '산지 프로파일'부터 채운다
+
+`beans.json`에 특정 로스터의 제품을 임의로 만들어 넣으면
+**없는 컵노트와 없는 점수를 지어내게 됩니다.**
+
+그래서 산지 수준의 일반 프로파일 16종만 담았습니다.
+"에티오피아 내추럴은 대체로 이런 향이 난다" 정도는 사실이고,
+브루잉 힌트도 고도·가공·품종처럼 구조적 특성에서 나오는 것만 적었습니다.
+
+실제로 마신 원두는 `entry_type: "actual"`로 하나씩 추가하는 것이 맞습니다.
+
+**향미 매칭은 계층을 따릅니다.** `fruity`를 고르면
+`fruity.berry.blueberry`를 가진 원두도 걸립니다.
+id가 점 경로라 문자열 비교만으로 조상 판별이 되지만,
+`sweet`가 `sweetened`를 잡지 않도록 경계(`.`)를 확인합니다.
+
+### 7. 다국어 — 번역 비용을 3층으로 나눈다
 
 전부 번역하려 들면 프로젝트가 무너집니다. 층별로 비용이 다릅니다.
 
@@ -261,7 +282,7 @@ SCA 휠은 [CC BY-NC-ND 4.0](https://sca.coffee/research/coffee-tasters-flavor-w
 - [x] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
 - [x] **Phase 1d** — 브루잉 로그 (저장 + JSON 내보내기)
 - [x] **Phase 2** — 챔피언 레시피 아카이브 (15종)
-- [ ] **Phase 3** — 플레이버 탐색 (드릴다운 휠)
+- [x] **Phase 3** — 플레이버 탐색 (드릴다운 휠)
 - [ ] **Phase 4** — 분석 · 위키 문서 · BLE 저울 연동 검토
 
 자세한 내용은 [기획서 7절](docs/01-project-plan.md)을 보세요.

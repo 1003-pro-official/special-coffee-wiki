@@ -121,8 +121,8 @@ const term = (ty, c) => I18n.term(ty, c);
    Data
    ──────────────────────────────────────────── */
 const Data = {
-  brewers: [], grinders: [], flavorNodes: [], recipes: [],
-  byId: { brewer: {}, grinder: {}, flavor: {}, recipe: {} },
+  brewers: [], grinders: [], flavorNodes: [], recipes: [], beans: [],
+  byId: { brewer: {}, grinder: {}, flavor: {}, recipe: {}, bean: {} },
 
   async loadAll(lang) {
     const get = async (path) => {
@@ -130,9 +130,9 @@ const Data = {
       if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
       return res.json();
     };
-    const [brewers, grinders, flavor, recipes, terms, dict] = await Promise.all([
+    const [brewers, grinders, flavor, recipes, beans, terms, dict] = await Promise.all([
       get('data/brewers.json'), get('data/grinders.json'),
-      get('data/flavor-nodes.json'), get('data/recipes.json'),
+      get('data/flavor-nodes.json'), get('data/recipes.json'), get('data/beans.json'),
       get('data/i18n/terms.json'), get(`data/i18n/${lang}.json`)
     ]);
 
@@ -140,12 +140,13 @@ const Data = {
     this.grinders = grinders.grinders;
     this.flavorNodes = flavor.nodes;
     this.recipes = recipes.recipes;
+    this.beans = beans.beans;
     I18n.terms = terms;
     I18n.dict = dict;
 
     const index = (arr, key) => arr.reduce((m, x) => (m[x.id] = x, m), this.byId[key]);
     index(this.brewers, 'brewer'); index(this.grinders, 'grinder');
-    index(this.flavorNodes, 'flavor'); index(this.recipes, 'recipe');
+    index(this.flavorNodes, 'flavor'); index(this.recipes, 'recipe'); index(this.beans, 'bean');
   },
 
   async loadDict(lang) {
@@ -181,7 +182,7 @@ const Data = {
 const App = {
   settings: null,
   page: 'home',   // home | recommend | results | brew-prep | brew | brew-done
-                  // | logs | log-detail | archive | archive-detail
+                  // | logs | log-detail | archive | archive-detail | flavor | bean
   onboardStep: 1,
   showAllBrewers: false,
   showAllGrinders: false,
@@ -189,6 +190,9 @@ const App = {
 
   // Phase 1c — 추출 세션
   brew: { result: null, plan: null, session: null, sound: true, wake: false, wakeFailed: false },
+
+  // Phase 3 — 플레이버 탐색
+  flavor: { drill: null, selected: [], mode: 'or', openBean: null },
 
   // Phase 2 — 아카이브
   archive: { type: 'all', geometry: null, roast: null, difficulty: null, openId: null },
@@ -237,6 +241,8 @@ const App = {
     else if (this.page === 'brew-prep')  root.innerHTML = this.viewBrewPrep();
     else if (this.page === 'brew')       root.innerHTML = this.viewBrew();
     else if (this.page === 'brew-done')  root.innerHTML = this.viewBrewDone();
+    else if (this.page === 'flavor')     root.innerHTML = this.viewFlavor();
+    else if (this.page === 'bean')       root.innerHTML = this.viewBeanDetail();
     else if (this.page === 'archive')    root.innerHTML = this.viewArchive();
     else if (this.page === 'archive-detail') root.innerHTML = this.viewArchiveDetail();
     else if (this.page === 'logs')       root.innerHTML = this.viewLogs();
@@ -469,8 +475,8 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
   /* ══════════ 홈 ══════════ */
   viewHome() {
-    const counts = [['data.brewers', Data.brewers.length], ['data.grinders', Data.grinders.length],
-                    ['data.flavorNodes', Data.flavorNodes.length], ['data.recipes', Data.recipes.length]];
+    const counts = [['data.recipes', Data.recipes.length], ['data.beans', Data.beans.length],
+                    ['data.brewers', Data.brewers.length], ['data.flavorNodes', Data.flavorNodes.length]];
     return `<div class="screen is-active">
       <header class="topbar">
         <span class="topbar__title">${esc(t('home.title'))}</span>${this.langSeg()}
@@ -1061,6 +1067,234 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
     </div>`;
   },
 
+  /* ══════════ 플레이버 탐색 (Phase 3) ══════════ */
+
+  nodeName(n) { return n ? (n.name[I18n.lang] || n.name.en) : ''; },
+  beanName(b) { return b ? (b.name[I18n.lang] || b.name.en) : '—'; },
+  nodeColor(n) {
+    // level 3은 색이 없으므로 조상에서 물려받습니다
+    if (!n) return 'var(--ink-4)';
+    if (n.color) return n.color;
+    const root = FlavorTree.byId(Data.flavorNodes, FlavorTree.family(n.id));
+    return root?.color || 'var(--ink-4)';
+  },
+
+  viewFlavor() {
+    const f = this.flavor;
+    const nodes = Data.flavorNodes;
+    const roots = FlavorTree.roots(nodes);
+    const counts = FlavorTree.countByFamily(Data.beans, nodes);
+    const matched = FlavorTree.matchBeans(Data.beans, f.selected, f.mode);
+
+    /* ── 휠: 대분류 9개만 ──
+       라벨이 짧아(Sweet, Floral 등) 방사형보다 수평이 읽기 쉽습니다. 회전하지 않습니다. */
+    const sectors = Wheel.sectors(roots.length);
+    const svg = `<svg width="260" height="260" viewBox="0 0 260 260"
+        role="img" aria-label="${esc(t('fl.title'))}">
+      ${sectors.map((s, i) => {
+        const n = roots[i];
+        const on = f.selected.some(x => FlavorTree.isDescendant(x, n.id)) || f.drill === n.id;
+        const empty = counts[n.id] === 0;
+        return `<path class="wheel__sector" d="${s.d}" fill="${esc(n.color)}"
+          opacity="${on ? 1 : empty ? 0.12 : 0.28}"
+          stroke="var(--paper)" stroke-width="2"
+          data-act="fl-drill" data-v="${esc(n.id)}"><title>${esc(this.nodeName(n))}</title></path>`;
+      }).join('')}
+      ${sectors.map((s, i) => `<text class="wheel__label" x="${s.labelX}" y="${s.labelY + 3.5}"
+          text-anchor="middle" fill="${
+            f.selected.some(x => FlavorTree.isDescendant(x, roots[i].id)) || f.drill === roots[i].id
+              ? '#fff' : 'var(--ink-3)'}"
+          pointer-events="none">${esc(this.nodeName(roots[i]))}</text>`).join('')}
+      <circle cx="130" cy="130" r="40" fill="var(--paper)" stroke="var(--line)"/>
+      <text class="wheel__center-cap" x="130" y="124" text-anchor="middle"
+            fill="var(--ink-3)">${esc(t('fl.selected'))}</text>
+      <text class="wheel__center-n" x="130" y="144" text-anchor="middle"
+            fill="var(--ink)">${f.selected.length}</text>
+    </svg>`;
+
+    /* ── 드릴다운 패널 ── */
+    const drillNode = f.drill ? FlavorTree.byId(nodes, f.drill) : null;
+    const kids = drillNode ? FlavorTree.children(nodes, drillNode.id) : [];
+    const crumb = drillNode ? FlavorTree.path(nodes, drillNode.id) : [];
+
+    const drill = drillNode ? `
+      <div class="drill">
+        <div class="drill__head">
+          <span class="drill__crumb">
+            <i style="background:${esc(this.nodeColor(drillNode))}"></i>
+            ${crumb.map(c => esc(this.nodeName(c))).join(' <span class="drill__sep">›</span> ')}
+          </span>
+          <button class="topbar__action" data-act="fl-up">${esc(t('fl.back'))}</button>
+        </div>
+        <div class="chipset">
+          <button class="chip" data-act="fl-toggle" data-v="${esc(drillNode.id)}"
+                  aria-pressed="${f.selected.includes(drillNode.id)}">
+            <i class="chip__dot" style="background:${esc(this.nodeColor(drillNode))}"></i>${esc(this.nodeName(drillNode))}
+          </button>
+          ${kids.map(k => `
+            <button class="chip" data-act="${FlavorTree.children(nodes, k.id).length ? 'fl-drill' : 'fl-toggle'}"
+                    data-v="${esc(k.id)}" aria-pressed="${f.selected.includes(k.id)}">
+              <i class="chip__dot" style="background:${esc(this.nodeColor(k))}"></i>${esc(this.nodeName(k))}${
+                FlavorTree.children(nodes, k.id).length ? ' ›' : ''}
+            </button>`).join('')}
+        </div>
+      </div>` : `<p class="dim" style="text-align:center">${esc(t('fl.pick'))}</p>`;
+
+    /* ── 선택 칩 ── */
+    const chosen = f.selected.length ? `
+      <div style="height:var(--s4)"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3)">
+        <span class="mode">
+          <button data-act="fl-mode" data-v="or"  aria-pressed="${f.mode === 'or'}">${esc(t('fl.mode.or'))}</button>
+          <button data-act="fl-mode" data-v="and" aria-pressed="${f.mode === 'and'}">${esc(t('fl.mode.and'))}</button>
+        </span>
+        <button class="topbar__action" data-act="fl-clear">${esc(t('fl.clear'))}</button>
+      </div>
+      <div style="height:var(--s2)"></div>
+      <p class="dim">${esc(t('fl.modeHint.' + f.mode))}</p>
+      <div style="height:var(--s3)"></div>
+      <div class="chipset">${f.selected.map(id => {
+        const n = FlavorTree.byId(nodes, id);
+        return `<button class="chip" data-act="fl-toggle" data-v="${esc(id)}" aria-pressed="true">
+          <i class="chip__dot" style="background:${esc(this.nodeColor(n))}"></i>${esc(this.nodeName(n))} ✕
+        </button>`;
+      }).join('')}</div>` : '';
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('fl.title'))}</span>
+        <span style="display:flex;align-items:center;gap:var(--s2)">
+          <button class="topbar__action" data-act="go-archive">${esc(t('ar.title'))} ›</button>
+          ${this.langSeg()}
+        </span>
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        <p class="dim">${esc(t('fl.sub'))}</p>
+        <div class="wheel">${svg}</div>
+        ${drill}
+        ${chosen}
+
+        <div style="height:var(--s6)"></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)">
+          <span class="caption">${esc(t('fl.matched'))}</span>
+          <span class="metric-sm">${matched.length}</span>
+        </div>
+        <div style="height:var(--s3)"></div>
+        ${matched.length ? matched.map(b => this.beanCard(b, f.selected)).join('')
+          : `<p class="dim">${esc(t('fl.none'))}</p>
+             <div style="height:var(--s2)"></div>
+             <p class="dim">${esc(t('fl.noneHint'))}</p>`}
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('explore')}
+    </div>`;
+  },
+
+  beanCard(b, selected = []) {
+    const hits = FlavorTree.matchedNodes(b, selected);
+    const tags = (b.flavor_nodes || []).slice(0, 4).map(id => {
+      const n = FlavorTree.byId(Data.flavorNodes, id);
+      const hit = hits.includes(id);
+      return `<span class="mini${hit ? ' mini--hit' : ''}">
+        <i style="background:${esc(this.nodeColor(n))}"></i>${esc(this.nodeName(n))}
+      </span>`;
+    }).join('');
+
+    const meta = [
+      term('process', b.process),
+      (b.variety || []).slice(0, 2).join(' · '),
+      b.origin.altitude_m ? `${b.origin.altitude_m[0]}–${b.origin.altitude_m[1]} m` : null
+    ].filter(Boolean).join(' · ');
+
+    return `<button class="bean" data-act="bean-open" data-id="${esc(b.id)}">
+      <span class="bean__name">${esc(this.beanName(b))}</span>
+      <span class="bean__meta">${esc(meta)}</span>
+      <span class="bean__tags">${tags}</span>
+    </button>`;
+  },
+
+  viewBeanDetail() {
+    const b = Data.byId.bean[this.flavor.openBean];
+    if (!b) return this.viewFlavor();
+
+    const profile = I18n.prose(b.profile_note);
+    const hint = I18n.prose(b.brewing_hint);
+    const region = b.origin.region ? (b.origin.region[I18n.lang] || b.origin.region.en) : '';
+
+    const flavors = (b.flavor_nodes || []).map(id => {
+      const n = FlavorTree.byId(Data.flavorNodes, id);
+      const p = FlavorTree.path(Data.flavorNodes, id);
+      return `<span class="mini" title="${esc(p.map(x => this.nodeName(x)).join(' › '))}">
+        <i style="background:${esc(this.nodeColor(n))}"></i>${esc(this.nodeName(n))}
+      </span>`;
+    }).join('');
+
+    const rows = [
+      [t('bean.origin'), [b.origin.country, region].filter(Boolean).join(' · ')],
+      [t('bean.variety'), (b.variety || []).join(', ')],
+      [t('bean.process'), term('process', b.process)],
+      [t('bean.altitude'), b.origin.altitude_m ? `${b.origin.altitude_m[0]}–${b.origin.altitude_m[1]} m` : '—'],
+      [t('bean.roasts'), (b.typical_roast_levels || []).map(r => term('roast_level', r)).join(', ')]
+    ];
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <button class="topbar__action" data-act="go-flavor">← ${esc(t('common.back'))}</button>
+        <span class="topbar__title">${esc(t('bean.detail'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s5)"></div>
+        <h1 class="title">${esc(this.beanName(b))}</h1>
+        <div style="height:var(--s2)"></div>
+        <span class="tag">${esc(t('bean.profileType'))}</span>
+
+        <div style="height:var(--s5)"></div>
+        ${rows.map(([k, v]) => `<div class="row">
+          <span class="row__label">${esc(k)}</span>
+          <span class="row__value">${esc(v || '—')}</span></div>`).join('')}
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('bean.flavors'))}</div>
+        <div style="height:var(--s3)"></div>
+        <div class="bean__tags">${flavors}</div>
+
+        ${profile ? `
+          <div style="height:var(--s6)"></div>
+          <div class="caption">${esc(t('bean.profile'))}</div>
+          <div style="height:var(--s2)"></div>
+          <p class="bod">${esc(profile.text)}</p>` : ''}
+
+        ${hint ? `
+          <div style="height:var(--s5)"></div>
+          <div class="caption">${esc(t('bean.hint'))}</div>
+          <div style="height:var(--s2)"></div>
+          <div class="note">${esc(hint.text)}</div>` : ''}
+
+        <div style="height:var(--s5)"></div>
+        <p class="dim">${esc(t('bean.profileTypeNote'))}</p>
+        <div style="height:var(--s8)"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn" data-act="bean-recommend" data-id="${esc(b.id)}">${esc(t('bean.recommend'))}</button>
+      </div>
+    </div>`;
+  },
+
+  /** 원두 상세 → 추천 입력을 그 원두 조건으로 채우고 바로 결과로 보냅니다 */
+  recommendForBean(beanId) {
+    const b = Data.byId.bean[beanId];
+    if (!b) return;
+    const fams = [...new Set((b.flavor_nodes || []).map(n => FlavorTree.family(n)))];
+    this.patchRec({
+      roast_level: (b.typical_roast_levels || ['medium'])[0],
+      process: b.process,
+      flavor_families: fams
+    });
+    this.runRecommend();
+    this.go('results');
+  },
+
   /* ══════════ 레시피 아카이브 (Phase 2) ══════════ */
 
   /** 아카이브에서 바로 추출하려면 추천 결과와 같은 모양의 객체가 필요합니다.
@@ -1101,7 +1335,11 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
     return `<div class="screen is-active">
       <header class="topbar">
-        <span class="topbar__title">${esc(t('ar.title'))}</span>${this.langSeg()}
+        <span class="topbar__title">${esc(t('ar.title'))}</span>
+        <span style="display:flex;align-items:center;gap:var(--s2)">
+          <button class="topbar__action" data-act="go-flavor">${esc(t('fl.title'))} ›</button>
+          ${this.langSeg()}
+        </span>
       </header>
       <div class="scroll pad">
         <div style="height:var(--s4)"></div>
@@ -1623,6 +1861,19 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         case 'tas-skip': this.resetTasting(); this.go('home'); break;
 
         case 'go-archive': this.archive.openId = null; this.go('archive'); break;
+        case 'go-flavor':  this.flavor.openBean = null; this.go('flavor'); break;
+
+        case 'fl-drill':   this.flavor.drill = el.dataset.v; this.render(); break;
+        case 'fl-up': {
+          const cur = FlavorTree.byId(Data.flavorNodes, this.flavor.drill);
+          this.flavor.drill = cur?.parent || null;
+          this.render(); break;
+        }
+        case 'fl-toggle':  this.flavor.selected = toggle(this.flavor.selected, el.dataset.v); this.render(); break;
+        case 'fl-mode':    this.flavor.mode = el.dataset.v; this.render(); break;
+        case 'fl-clear':   this.flavor.selected = []; this.render(); break;
+        case 'bean-open':  this.flavor.openBean = el.dataset.id; this.go('bean'); break;
+        case 'bean-recommend': this.recommendForBean(el.dataset.id); break;
         case 'ar-open':   this.archive.openId = el.dataset.id; this.go('archive-detail'); break;
         case 'ar-brew':   this.openBrew(el.dataset.id); break;
         case 'ar-type':   this.archive.type = el.dataset.v; this.render(); break;

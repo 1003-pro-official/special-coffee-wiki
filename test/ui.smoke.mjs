@@ -23,6 +23,7 @@ const strip=s=>s.replace(/if \(typeof module[\s\S]*$/,'');
 eval(strip(fs.readFileSync('assets/engine.js','utf-8'))+'\n;Object.assign(globalThis,{Grind,Score,Convert,Engine});');
 eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
 eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
+eval(strip(fs.readFileSync('assets/flavor.js','utf-8'))+'\n;Object.assign(globalThis,{FlavorTree,Wheel});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
@@ -226,6 +227,75 @@ console.log('\n[Phase 2 — 아카이브]');
   App.runRecommend();
 }
 
+console.log('\n[Phase 3 — 플레이버 탐색]');
+{
+  ok(Data.beans.length===16, `원두 ${Data.beans.length}종 로드`);
+  App.flavor={drill:null,selected:[],mode:'or',openBean:null};
+  App.page='flavor';
+  let h=App.viewFlavor();
+  ok(h.length>2000&&!h.includes('undefined')&&!h.includes('NaN'), `휠 화면 (${h.length}자)`);
+  ok((h.match(/wheel__sector/g)||[]).length===9, '섹터 9개 렌더');
+  ok(h.includes('<path class="wheel__sector"'), 'SVG path 생성');
+
+  // 드릴다운
+  App.flavor.drill='fruity';
+  h=App.viewFlavor();
+  ok(h.includes('drill__crumb'), '드릴 패널 표시');
+  ok((h.match(/data-act="fl-drill"/g)||[]).length>9, '하위 계층 칩 추가 (베리/건과일 등)');
+
+  App.flavor.drill='fruity.berry';
+  h=App.viewFlavor();
+  ok(h.includes('›'), '경로 표시');
+
+  // 선택 → 필터
+  App.flavor={drill:null,selected:['fruity.berry.blueberry'],mode:'or',openBean:null};
+  h=App.viewFlavor();
+  const shown=FlavorTree.matchBeans(Data.beans, App.flavor.selected, 'or');
+  ok(shown.length===1, `블루베리 → ${shown.length}종`);
+  ok(h.includes('mini--hit'), '매칭된 향미가 강조 표시됨');
+
+  // AND / OR
+  App.flavor.selected=['floral','nutty_cocoa'];
+  App.flavor.mode='or';
+  const orN=FlavorTree.matchBeans(Data.beans,App.flavor.selected,'or').length;
+  App.flavor.mode='and';
+  const andN=FlavorTree.matchBeans(Data.beans,App.flavor.selected,'and').length;
+  ok(orN>andN, `OR ${orN} > AND ${andN}`);
+  h=App.viewFlavor();
+  ok(h.includes('fl-mode'), '모드 토글 렌더');
+
+  // 결과 없음
+  App.flavor.selected=['other.chemical'];
+  App.flavor.mode='or';
+  h=App.viewFlavor();
+  ok(!h.includes('undefined'), '결과 0종일 때도 정상 렌더');
+
+  // 원두 상세
+  App.flavor={drill:null,selected:[],mode:'or',openBean:'origin-ke-kirinyaga-washed'};
+  App.page='bean';
+  const d=App.viewBeanDetail();
+  ok(d.length>800&&!d.includes('undefined')&&!d.includes('NaN'), `원두 상세 (${d.length}자)`);
+  ok(d.includes('SL28')||d.includes('sl28'), '품종 표시');
+
+  // 전 원두 상세가 예외 없이 렌더되는지
+  let bad=[];
+  for(const b of Data.beans){
+    App.flavor.openBean=b.id;
+    try{ const x=App.viewBeanDetail(); if(x.includes('undefined')||x.includes('NaN')) bad.push(b.id); }
+    catch(e){ bad.push(`${b.id}: ${e.message}`); }
+  }
+  ok(bad.length===0, bad.join(' / ')||`원두 ${Data.beans.length}종 상세 전부 정상`);
+
+  // 원두 → 추천으로 이어지는지
+  App.recommendForBean('origin-et-guji-natural');
+  ok(App.page==='results', `원두에서 추천으로 (${App.page})`);
+  ok(App.settings.rec.roast_level==='light' && App.settings.rec.process==='natural',
+     `추천 조건 자동 입력 (${App.settings.rec.roast_level}/${App.settings.rec.process})`);
+  ok(App.results && App.results.length===Data.recipes.length, '추천 결과 생성');
+  const top=App.results.filter(r=>r.fit!=='mismatch')[0];
+  ok(top && top.score>=60, `구지 내추럴 1위 ${top.recipe.id} ${top.score}점`);
+}
+
 console.log('\n[영어 — 로그 화면]');
 {
   await Data.loadDict('en'); I18n.setLang('en');
@@ -237,6 +307,16 @@ console.log('\n[영어 — 로그 화면]');
   const e2=App.viewArchive();
   const kk2=[...new Set((e2.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
   ok(kk2.length===0, '영어 아카이브 목록에 한글 없음'+(kk2.length?` → ${JSON.stringify(kk2)}`:''));
+
+  App.page='flavor'; App.flavor={drill:'fruity',selected:['fruity.berry.blueberry'],mode:'or',openBean:null};
+  const e3=App.viewFlavor();
+  const kk3=[...new Set((e3.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
+  ok(kk3.length===0, '영어 플레이버 화면에 한글 없음'+(kk3.length?` → ${JSON.stringify(kk3)}`:''));
+
+  App.flavor.openBean='origin-id-sumatra-wethulled';
+  const e4=App.viewBeanDetail();
+  const kk4=[...new Set((e4.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
+  ok(kk4.length===0, '영어 원두 상세에 한글 없음'+(kk4.length?` → ${JSON.stringify(kk4)}`:''));
   await Data.loadDict('ko'); I18n.setLang('ko');
 }
 
