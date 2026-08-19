@@ -359,3 +359,81 @@ a { color:var(--accent); }
 .numfield input::-webkit-outer-spin-button,
 .numfield input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .numfield input[type=number] { -moz-appearance:textfield; }
+
+/* ══════════════════════════════════════════════════════════
+   Phase 1c — 추출 가이드
+   전제: 손에 주전자를 들고 팔 길이(약 50cm)에서 봅니다.
+   ══════════════════════════════════════════════════════════ */
+.brew { display:flex; flex-direction:column; flex:1; background:var(--paper); }
+
+.brew__top {
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s2);
+  min-height:52px; padding-inline:var(--s4); flex-shrink:0;
+}
+.brew__top button {
+  font-size:var(--f-label); font-weight:500; color:var(--ink-3);
+  min-height:var(--tap); padding-inline:var(--s2); white-space:nowrap;
+}
+.brew__top button[aria-pressed="true"] { color:var(--accent); }
+
+.brew__memo {
+  margin-inline:var(--s5); background:var(--surface);
+  border-radius:6px; padding:var(--s3) var(--s4); flex-shrink:0;
+}
+
+.brew__mid {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding-inline:var(--s5); gap:0;
+}
+
+.brew__timer {
+  font-size:var(--f-display); font-weight:600; letter-spacing:-.03em; line-height:1;
+  transition:color .15s;
+}
+.brew__timer.is-alert { color:var(--accent); }
+.brew__timer.is-paused { color:var(--ink-4); }
+
+.brew__prog { width:100%; max-width:300px; margin-top:var(--s6); }
+.brew__prog-track { height:6px; background:var(--accent-weak); border-radius:3px; overflow:hidden; }
+/* 시간을 나타내는 바가 가감속하면 계측값을 거짓말하는 셈이 됩니다 → linear 고정 */
+.brew__prog-fill { height:100%; background:var(--accent); border-radius:3px; transition:width .3s linear; }
+.brew__prog-label { margin-top:7px; }
+
+.brew__rule { width:100%; max-width:300px; height:1px; background:var(--line); margin-block:var(--s6); }
+
+.brew__step { font-size:var(--f-subtitle); font-weight:600; color:var(--accent); letter-spacing:-.005em; }
+.brew__phase { margin-top:var(--s1); }
+.brew__target {
+  font-size:var(--f-metric); font-weight:600; letter-spacing:-.02em;
+  margin-top:var(--s3); display:flex; align-items:baseline; justify-content:center;
+}
+.brew__how { margin-top:var(--s3); font-size:var(--f-body); color:var(--ink-3); }
+.brew__next { margin-top:var(--s6); }
+
+.brew__bottom {
+  display:flex; gap:var(--s2); flex-shrink:0;
+  padding:var(--s3) var(--s5) calc(var(--s5) + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+}
+.brew__bottom .btn { flex:1; }
+.brew__bottom .btn--secondary { flex:0 0 128px; }
+:lang(en) .brew__bottom .btn--secondary { flex:0 0 140px; }
+
+/* ── 준비 · 완료 화면의 단계 목록 ── */
+.tl { border-left:2px solid var(--line-strong); padding-left:var(--s4); }
+.tl__item { position:relative; padding-block:var(--s2); }
+.tl__item + .tl__item { border-top:1px solid var(--line); }
+.tl__item::before {
+  content:''; position:absolute; left:calc(var(--s4) * -1 - 5px); top:calc(var(--s2) + 6px);
+  width:8px; height:8px; border-radius:50%;
+  background:var(--paper); border:2px solid var(--line-strong);
+}
+.tl__item.is-done::before { background:var(--accent); border-color:var(--accent); }
+.tl__row { display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); }
+.tl__time { font-size:var(--f-label); font-weight:600; color:var(--ink-3); flex:0 0 52px; }
+:lang(en) .tl__time { flex-basis:56px; }
+.tl__name { flex:1; font-size:var(--f-label); font-weight:600; color:var(--ink); }
+.tl__g { font-size:var(--f-label); font-weight:600; color:var(--ink); white-space:nowrap; }
+.tl__sub { font-size:var(--f-caption); color:var(--ink-3); margin-top:2px; line-height:1.45; }
+.tl__delta { font-size:var(--f-caption); font-weight:600; color:var(--accent); }

@@ -9,7 +9,7 @@
 
 ## 현재 상태
 
-**Phase 1b 완료** — 장비를 고르면 레시피가 내 기준으로 변환돼 추천됩니다.
+**Phase 1c 완료** — 추천받은 레시피로 실시간 추출 가이드까지 이어집니다.
 
 | 구분 | 상태 |
 |---|---|
@@ -19,7 +19,7 @@
 | 시드 데이터 | 완료 — `data/` 4종 + i18n 3종 |
 | **앱 — 온보딩 · i18n** | **동작** |
 | **앱 — 추천 엔진** | **동작** — `assets/engine.js` |
-| 앱 — 추출 가이드 | 미착수 — Phase 1c |
+| **앱 — 추출 가이드** | **동작** — `assets/brew.js` |
 | 앱 — 브루잉 로그 | 미착수 — Phase 1d |
 
 ---
@@ -48,6 +48,7 @@ index.html              앱 셸
 assets/
   ├─ style.css          디자인 토큰 + 컴포넌트
   ├─ engine.js          Grind · Score · Convert · Engine  (DOM 의존 없음)
+  ├─ brew.js            BrewPlan · Alerts · WakeLock · BrewSession
   └─ app.js             Store · I18n · Data · App        (화면·이벤트)
 data/
   ├─ brewers.json       드리퍼 17
@@ -58,18 +59,24 @@ data/
       ├─ ko.json        UI 문자열 (한국어)
       ├─ en.json        UI 문자열 (영어)
       └─ terms.json     열거형 코드 → 표시명 사전
-test/engine.test.mjs    추천 엔진 단위 테스트 40건
+test/
+  ├─ engine.test.mjs    추천 엔진 40건
+  ├─ brew.test.mjs      타임라인 44건
+  └─ ui.smoke.mjs       화면 렌더 · 타이머 18건
 docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 절차
 ```
 
 ### 테스트
 
 ```bash
-node test/engine.test.mjs
+node test/engine.test.mjs   # 추천 엔진 40건
+node test/brew.test.mjs     # 추출 타임라인 44건
+node test/ui.smoke.mjs      # 화면 렌더 · 타이머 18건
 ```
 
-`engine.js`에는 DOM 의존이 없어 Node에서 그대로 돌아갑니다.
+`engine.js`와 `brew.js`에는 DOM 의존이 없어 Node에서 그대로 돌아갑니다.
 실제 `data/*.json`을 읽어 검증하므로, 데이터를 고치면 테스트가 먼저 깨집니다.
+`ui.smoke.mjs`는 브라우저 API를 최소한으로 흉내내 화면 함수와 타이머를 돌립니다.
 
 ---
 
@@ -81,14 +88,14 @@ node test/engine.test.mjs
 | [`data/grinders.json`](data/grinders.json) | 그라인더 카탈로그 + 분쇄도 앵커 | 21 |
 | [`data/flavor-nodes.json`](data/flavor-nodes.json) | 향미 용어 계층 (L1 9 · L2 28 · L3 46) | 83 |
 | [`data/recipes.json`](data/recipes.json) | 표준 레시피 8 + 챔피언 1 | 9 |
-| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 145 |
+| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 178 |
 | [`data/i18n/terms.json`](data/i18n/terms.json) | 열거형 코드 사전 | 14종 |
 
 미작성: `data/beans.json`
 
 ---
 
-## 핵심 설계 네 가지
+## 핵심 설계 다섯 가지
 
 ### 1. 분쇄도 — 마이크론이 아니라 앵커 + 밴드
 
@@ -140,7 +147,18 @@ ML이 아니라 100점 가중 스코어입니다. **추천 근거를 화면에 �
 로스팅 정도가 2단계 이상 벌어지고 향미·목표가 하나도 안 맞으면 `mismatch`로 분류해
 목록 아래쪽에 "조건에 맞지 않는 레시피"로 분리하고, 40점대를 '그럭저럭'으로 읽지 않게 합니다.
 
-### 4. 다국어 — 번역 비용을 3층으로 나눈다
+### 4. 타이머는 절대 시각으로 잰다
+
+경과 시간을 `requestAnimationFrame` 누적으로 재면, 탭이 백그라운드로 갔다 오는 동안
+프레임이 멈춰 시간이 어긋납니다. 추출 중에 알림을 확인하려고 다른 앱을 열기만 해도 틀어집니다.
+
+그래서 `BrewSession`은 `Date.now()` 기준으로만 경과를 계산합니다.
+rAF는 화면을 다시 그리는 용도로만 씁니다.
+
+타이머 화면은 **매 프레임 `innerHTML`을 다시 만들지 않습니다.**
+한 번 그린 뒤 `paintBrew()`가 바뀐 노드의 textContent만 갱신합니다.
+
+### 5. 다국어 — 번역 비용을 3층으로 나눈다
 
 전부 번역하려 들면 프로젝트가 무너집니다. 층별로 비용이 다릅니다.
 
@@ -200,7 +218,7 @@ SCA 휠은 [CC BY-NC-ND 4.0](https://sca.coffee/research/coffee-tasters-flavor-w
 - [x] **Phase 0** — 기획, 디자인 시스템, 시드 데이터
 - [x] **Phase 1a** — 데이터 로딩 + 온보딩 + i18n 구조
 - [x] **Phase 1b** — 추천 엔진 (스코어링 + 장비 변환)
-- [ ] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
+- [x] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
 - [ ] **Phase 1d** — 브루잉 로그 (저장 + JSON 내보내기)
 - [ ] **Phase 2** — 챔피언 레시피 아카이브 (12~15개)
 - [ ] **Phase 3** — 플레이버 탐색 (드릴다운 휠)

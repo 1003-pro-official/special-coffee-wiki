@@ -176,11 +176,14 @@ const Data = {
    ──────────────────────────────────────────── */
 const App = {
   settings: null,
-  page: 'home',                 // home | recommend | results
+  page: 'home',   // home | recommend | results | brew-prep | brew | brew-done
   onboardStep: 1,
   showAllBrewers: false,
   showAllGrinders: false,
   results: null,
+
+  // Phase 1c — 추출 세션
+  brew: { result: null, plan: null, session: null, sound: true, wake: false, wakeFailed: false },
 
   async init() {
     this.settings = Store.load();
@@ -207,16 +210,22 @@ const App = {
     await Data.loadDict(lang);
     if (this.page === 'results') this.runRecommend();   // 근거 문구를 새 언어로 다시 생성
     this.render();
+    // 타이머 진행 중이면 render()가 화면을 다시 그렸으므로 즉시 현재 상태를 반영
+    if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
   },
 
   render() {
     const root = document.getElementById('root');
-    if (!this.settings.onboarded)      root.innerHTML = this.viewOnboard();
-    else if (this.page === 'recommend') root.innerHTML = this.viewRecInput();
-    else if (this.page === 'results')   root.innerHTML = this.viewRecResults();
-    else                                root.innerHTML = this.viewHome();
+    if (!this.settings.onboarded)        root.innerHTML = this.viewOnboard();
+    else if (this.page === 'recommend')  root.innerHTML = this.viewRecInput();
+    else if (this.page === 'results')    root.innerHTML = this.viewRecResults();
+    else if (this.page === 'brew-prep')  root.innerHTML = this.viewBrewPrep();
+    else if (this.page === 'brew')       root.innerHTML = this.viewBrew();
+    else if (this.page === 'brew-done')  root.innerHTML = this.viewBrewDone();
+    else                                 root.innerHTML = this.viewHome();
     root.scrollTop = 0;
     this.bind(root);
+    if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
   },
 
   go(page) { this.page = page; this.render(); },
@@ -691,9 +700,293 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       ${conv}
       ${cautions}
       <div style="height:var(--s4)"></div>
-      <button class="btn" disabled title="${esc(t('rec.startSoon'))}">${esc(t('rec.start'))}</button>
-      <p class="dim" style="text-align:center;margin-top:var(--s2)">${esc(t('rec.startSoon'))}</p>
+      <button class="btn" data-act="open-brew" data-id="${esc(rec.id)}">${esc(t('rec.start'))}</button>
     </article>`;
+  },
+
+  /* ══════════ 추출 가이드 (Phase 1c) ══════════ */
+
+  /** 추천 결과에서 추출 세션을 엽니다.
+      변환된 steps(r.steps)를 씁니다 — 원본이 아니라 내 장비에 맞춰 보정된 타임라인입니다. */
+  openBrew(recipeId) {
+    const r = this.results?.find(x => x.recipe.id === recipeId);
+    if (!r) return;
+    this.brew.result = r;
+    this.brew.plan = BrewPlan.build(r.steps);
+    this.brew.session = null;
+    this.brew.wakeFailed = false;
+    this.go('brew-prep');
+  },
+
+  stepName(step) {
+    return term('step_type', step.type);
+  },
+
+  /** style / note 는 {ko,en} 또는 평문 문자열 둘 다 올 수 있습니다 */
+  stepText(v) {
+    if (v == null) return null;
+    if (typeof v === 'string') return v;
+    return v[I18n.lang] || v.en || v.ko || null;
+  },
+
+  viewBrewPrep() {
+    const b = this.brew;
+    const r = b.result;
+    if (!r) return this.viewHome();
+    const f = b.plan;
+
+    const params = [
+      [t('param.grind'), (() => {
+        const g = this.fmtGrind(this.ctx().grinder, r.final.grind_setting);
+        return `${g.text}${g.hint ? ` (${g.hint})` : ''}`;
+      })()],
+      [t('param.temp'), `${r.final.temp_c} °C`],
+      [t('param.dose'), `${r.final.dose_g} g`],
+      [t('param.water'), `${r.final.water_g} g`]
+    ];
+
+    const prep = f.prep.map(s => {
+      const note = this.stepText(s.note);
+      return `<div class="tl__item">
+        <div class="tl__row">
+          <span class="tl__time">—</span>
+          <span class="tl__name">${esc(this.stepName(s))}</span>
+          ${s.water_g ? `<span class="tl__g">${s.water_g} g</span>` : ''}
+        </div>
+        ${note ? `<div class="tl__sub" style="padding-left:52px">${esc(note)}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    const steps = f.timeline.map(s => {
+      const style = this.stepText(s.style);
+      const g = BrewPlan.targetAt(f, s.index);
+      return `<div class="tl__item">
+        <div class="tl__row">
+          <span class="tl__time">${esc(BrewPlan.mmss(s.startS))}</span>
+          <span class="tl__name">${esc(this.stepName(s))}</span>
+          ${g != null ? `<span class="tl__g">${g} g</span>` : ''}
+        </div>
+        ${style ? `<div class="tl__sub" style="padding-left:52px">${esc(style)}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <button class="topbar__action" data-act="go-results">← ${esc(t('common.back'))}</button>
+        <span class="topbar__title">${esc(t('brew.prep.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        <h1 class="title">${esc(Data.recipeTitle(r.recipe))}</h1>
+        <div style="height:var(--s5)"></div>
+
+        <div class="caption">${esc(t('brew.prep.params'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="metric-grid">${params.map(([k, v]) => `
+          <div class="metric-card">
+            <div class="caption">${esc(k)}</div>
+            <div class="metric-card__value"><span class="metric-sm">${esc(v)}</span></div>
+          </div>`).join('')}</div>
+
+        ${prep ? `
+          <div style="height:var(--s6)"></div>
+          <div class="caption">${esc(t('brew.prep.before'))}</div>
+          <div style="height:var(--s2)"></div>
+          <div class="tl">${prep}</div>` : ''}
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('brew.prep.timeline'))} · ${esc(BrewPlan.mmss(f.totalS))}</div>
+        <div style="height:var(--s2)"></div>
+        ${f.timeline.length ? `<div class="tl">${steps}</div>`
+                            : `<p class="dim">${esc(t('brew.prep.noSteps'))}</p>`}
+
+        <div style="height:var(--s6)"></div>
+        <p class="dim">${esc(t('brew.prep.armNote'))}</p>
+        <div style="height:var(--s8)"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn" data-act="brew-start" ${f.timeline.length ? '' : 'disabled'}>
+          ${esc(t('brew.prep.start'))}
+        </button>
+      </div>
+    </div>`;
+  },
+
+  /** 타이머 화면은 한 번만 그리고, 이후에는 paintBrew()가 개별 노드만 갱신합니다.
+      매 프레임 innerHTML을 다시 만들면 입력이 끊기고 배터리를 잡아먹습니다. */
+  viewBrew() {
+    const b = this.brew;
+    if (!b.result) return this.viewHome();
+    const last = null;   // Phase 1d에서 직전 로그의 next_action을 여기에 띄웁니다
+
+    return `<div class="screen is-active brew">
+      <div class="brew__top">
+        <button data-act="brew-exit">${esc(t('brew.exit'))}</button>
+        <span style="display:flex;gap:var(--s2)">
+          <button data-act="brew-sound" aria-pressed="${b.sound}">
+            ${b.sound ? '🔊' : '🔇'} ${esc(t('brew.sound'))}
+          </button>
+          <button data-act="brew-wake" aria-pressed="${b.wake}" ${b.wakeFailed ? 'disabled' : ''}>
+            ${b.wake ? '🔒' : '🔓'} ${esc(t('brew.keepOn'))}
+          </button>
+        </span>
+      </div>
+
+      ${last ? `<div class="brew__memo">
+        <div class="caption">${esc(t('brew.lastNote'))}</div>
+        <div style="font-size:var(--f-label);color:var(--ink-2);margin-top:3px">${esc(last)}</div>
+      </div>` : ''}
+
+      <div class="brew__mid">
+        <div class="brew__timer" id="bTimer">0:00</div>
+        <div class="brew__prog">
+          <div class="brew__prog-track"><div class="brew__prog-fill" id="bFill" style="width:0%"></div></div>
+          <div class="caption brew__prog-label" id="bSteps"></div>
+        </div>
+        <div class="brew__rule"></div>
+        <div class="brew__step" id="bStep"></div>
+        <div class="caption brew__phase" id="bPhase"></div>
+        <div class="brew__target"><span id="bTarget">—</span><span class="unit">g</span></div>
+        <div class="brew__how" id="bHow"></div>
+        <div class="caption brew__next" id="bNext"></div>
+      </div>
+
+      <div class="brew__bottom">
+        <button class="btn btn--secondary" data-act="brew-pause" id="bPause">${esc(t('brew.pause'))}</button>
+        <button class="btn" data-act="brew-next">${esc(t('brew.next'))}</button>
+      </div>
+    </div>`;
+  },
+
+  paintBrew(s) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el && el.textContent !== v) el.textContent = v; };
+    const b = this.brew;
+    if (!b.plan) return;
+
+    if (s.finished) { this.finishBrew(); return; }
+
+    const timer = document.getElementById('bTimer');
+    if (timer) {
+      timer.textContent = BrewPlan.mmss(s.t);
+      timer.classList.toggle('is-alert', s.toNext > 0 && s.toNext <= 3);
+      timer.classList.toggle('is-paused', !!s.paused);
+    }
+
+    const fill = document.getElementById('bFill');
+    if (fill) fill.style.width = `${Math.round(s.progress * 100)}%`;
+
+    set('bSteps', t('brew.stepOf', { c: s.i + 1, t: b.plan.timeline.length }));
+    set('bStep', s.step ? this.stepName(s.step) : '—');
+    set('bPhase', s.paused ? t('brew.pause') : t(s.phase === 'pouring' ? 'brew.pouring' : 'brew.waiting'));
+
+    const g = BrewPlan.targetAt(b.plan, s.i);
+    set('bTarget', g != null ? String(g) : '—');
+
+    let how = this.stepText(s.step?.style) || '';
+    if (s.step?.removeAtS != null) how = t('brew.removeAt', { time: BrewPlan.mmss(s.step.removeAtS) });
+    set('bHow', how);
+
+    set('bNext', s.next ? t('brew.nextIn', { s: s.toNext }) : t('brew.doneIn', { s: s.toNext }));
+
+    const pause = document.getElementById('bPause');
+    if (pause) pause.textContent = s.paused ? t('brew.resume') : t('brew.pause');
+  },
+
+  async beginTimer() {
+    const b = this.brew;
+    Alerts.enabled = b.sound;
+    b.session = new BrewSession(b.plan, (s) => this.paintBrew(s));
+    this.page = 'brew';
+    this.render();
+    b.wake = await WakeLock.acquire();
+    b.wakeFailed = !b.wake;
+    b.session.start();
+    // Wake Lock 결과를 버튼에 반영
+    const wb = document.querySelector('[data-act="brew-wake"]');
+    if (wb) {
+      wb.setAttribute('aria-pressed', String(b.wake));
+      wb.textContent = `${b.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
+      if (b.wakeFailed) wb.setAttribute('disabled', '');
+    }
+  },
+
+  finishBrew() {
+    const b = this.brew;
+    b.session?.stop();
+    WakeLock.release();
+    this.page = 'brew-done';
+    this.render();
+  },
+
+  exitBrew() {
+    if (!confirm(t('brew.exitConfirm'))) return;
+    this.brew.session?.stop();
+    WakeLock.release();
+    this.brew.session = null;
+    this.go('results');
+  },
+
+  viewBrewDone() {
+    const b = this.brew;
+    const r = b.result;
+    if (!r || !b.session) return this.viewHome();
+
+    const actual = b.session.elapsed;
+    const target = b.plan.totalS;
+    const diff = Math.round(actual - target);
+
+    const marks = b.session.marks.map(m => {
+      const st = b.plan.timeline[m.index];
+      if (!st) return '';
+      const d = Math.round(m.atS - st.startS);
+      return `<div class="tl__item is-done">
+        <div class="tl__row">
+          <span class="tl__time">${esc(BrewPlan.mmss(m.atS))}</span>
+          <span class="tl__name">${esc(this.stepName(st))}</span>
+          ${d !== 0 ? `<span class="tl__delta">${d > 0 ? '+' : ''}${d}s</span>` : ''}
+        </div>
+        <div class="tl__sub" style="padding-left:52px">
+          ${esc(t('brew.done.target'))} ${esc(BrewPlan.mmss(st.startS))} · ${esc(m.auto ? t('brew.done.auto') : t('brew.done.manual'))}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('brew.done.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s5)"></div>
+        <p class="dim">${esc(Data.recipeTitle(r.recipe))}</p>
+        <div style="height:var(--s4)"></div>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="caption">${esc(t('brew.done.total'))}</div>
+            <div class="metric-card__value"><span class="metric">${esc(BrewPlan.mmss(actual))}</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="caption">${esc(t('brew.done.diff'))}</div>
+            <div class="metric-card__value"><span class="metric-sm">${diff > 0 ? '+' : ''}${diff}<span class="unit">s</span></span></div>
+          </div>
+        </div>
+        <div style="height:var(--s2)"></div>
+        <p class="dim">${esc(t('brew.done.target'))} ${esc(BrewPlan.mmss(target))}</p>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('brew.done.marks'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="tl">${marks}</div>
+
+        <div style="height:var(--s6)"></div>
+        <div class="note">${esc(t('brew.done.logSoon'))}</div>
+        <div style="height:var(--s8)"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn--secondary" data-act="brew-again">${esc(t('brew.done.again'))}</button>
+        <button class="btn" data-act="go-home">${esc(t('brew.done.home'))}</button>
+      </div>
+    </div>`;
   },
 
   /** 보정 사유의 코드값을 사람이 읽는 표시명으로 바꿉니다 */
@@ -712,7 +1005,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
   /* ══════════ 이벤트 ══════════ */
   bind(root) {
-    root.addEventListener('click', (e) => {
+    root.addEventListener('click', async (e) => {
       const el = e.target.closest('[data-act]');
       if (!el) return;
       const act = el.dataset.act;
@@ -758,6 +1051,32 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         }
 
         case 'submit-rec': this.runRecommend(); this.go('results'); break;
+        case 'go-results': this.go('results'); break;
+
+        case 'open-brew':   this.openBrew(el.dataset.id); break;
+        case 'brew-start':  this.beginTimer(); break;
+        case 'brew-exit':   this.exitBrew(); break;
+        case 'brew-pause':
+          this.brew.session?.[this.brew.session.paused ? 'resume' : 'pause']();
+          this.paintBrew(this.brew.session.state());
+          break;
+        case 'brew-next':   this.brew.session?.skipToNext(); break;
+        case 'brew-sound': {
+          this.brew.sound = !this.brew.sound;
+          Alerts.enabled = this.brew.sound;
+          if (this.brew.sound) Alerts.arm();
+          el.setAttribute('aria-pressed', String(this.brew.sound));
+          el.textContent = `${this.brew.sound ? '🔊' : '🔇'} ${t('brew.sound')}`;
+          break;
+        }
+        case 'brew-wake': {
+          if (this.brew.wake) { WakeLock.release(); this.brew.wake = false; }
+          else { this.brew.wake = await WakeLock.acquire(); this.brew.wakeFailed = !this.brew.wake; }
+          el.setAttribute('aria-pressed', String(this.brew.wake));
+          el.textContent = `${this.brew.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
+          break;
+        }
+        case 'brew-again':  this.openBrew(this.brew.result.recipe.id); break;
 
         case 'reset':
           if (confirm(t('settings.resetConfirm'))) {
