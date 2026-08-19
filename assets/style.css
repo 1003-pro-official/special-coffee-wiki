@@ -492,3 +492,63 @@ a { color:var(--accent); }
 
 .filerow { display:flex; gap:var(--s2); }
 .filerow .btn { flex:1; }
+
+/* ══════════════════════════════════════════════════════════
+   Phase 2 — 레시피 아카이브
+   ══════════════════════════════════════════════════════════ */
+.filters { display:flex; gap:var(--s2); overflow-x:auto; padding-bottom:var(--s2); }
+.filters::-webkit-scrollbar { height:0; }
+.filters .chip { flex-shrink:0; }
+
+.ar {
+  display:block; width:100%; text-align:left;
+  border:1px solid var(--line); border-radius:var(--radius);
+  padding:var(--s4) var(--s5); background:var(--paper);
+}
+.ar + .ar { margin-top:var(--s2); }
+.ar__head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); }
+.ar__year { font-size:var(--f-metric-sm); font-weight:600; letter-spacing:-.01em; color:var(--ink-3); flex-shrink:0; }
+.ar__name { font-size:var(--f-body); font-weight:600; line-height:1.4; color:var(--ink); }
+.ar__meta { font-size:var(--f-caption); color:var(--ink-3); margin-top:var(--s1); line-height:1.5; }
+.ar__tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:var(--s2); }
+.tag {
+  font-size:10px; font-weight:600; letter-spacing:.03em;
+  padding:2px 7px; border-radius:3px;
+  background:var(--surface); color:var(--ink-3); border:1px solid var(--line);
+}
+
+/* 세로 타임라인 — 물량을 블록 높이로 (docs/02 P1) */
+.vt { display:flex; flex-direction:column; }
+.vt__row { display:flex; gap:var(--s3); align-items:stretch; }
+.vt__time {
+  flex:0 0 46px; font-size:var(--f-label); font-weight:600; color:var(--ink-3); padding-top:var(--s2);
+}
+:lang(en) .vt__time { flex-basis:50px; }
+.vt__rail { flex:0 0 2px; background:var(--line-strong); position:relative; }
+.vt__row:first-child .vt__rail { border-radius:1px 1px 0 0; }
+.vt__row:last-child .vt__rail { background:transparent; }
+.vt__dot {
+  position:absolute; left:-4px; top:var(--s3);
+  width:10px; height:10px; border-radius:50%;
+  background:var(--paper); border:2px solid var(--line-strong);
+}
+.vt__row--pour .vt__dot { background:var(--accent); border-color:var(--accent); }
+.vt__body { flex:1; padding:var(--s2) 0 var(--s4); min-width:0; }
+.vt__title { display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); }
+.vt__name { font-size:var(--f-label); font-weight:600; color:var(--ink); }
+.vt__g { font-size:var(--f-label); font-weight:600; color:var(--ink); white-space:nowrap; }
+.vt__desc { font-size:var(--f-caption); color:var(--ink-3); margin-top:3px; line-height:1.5; }
+
+/* 물량 막대 — 누적 물량을 시각적으로 */
+.vt__bar { height:4px; background:var(--accent-weak); border-radius:2px; margin-top:var(--s2); overflow:hidden; }
+.vt__bar i { display:block; height:100%; background:var(--accent); border-radius:2px; }
+
+/* 온도가 바뀌는 단계에만 붙는 배지 */
+.temp-badge {
+  display:inline-block; margin-left:var(--s2);
+  font-size:10px; font-weight:600; padding:2px 6px; border-radius:3px;
+  background:var(--accent-weak); color:var(--accent); border:1px solid var(--accent);
+}
+
+.src { font-size:var(--f-caption); line-height:1.7; word-break:break-all; }
+.src a { color:var(--accent); }

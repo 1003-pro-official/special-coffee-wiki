@@ -373,8 +373,10 @@ const Convert = {
    Engine — 진입점
    ══════════════════════════════════════════════════════════ */
 const Engine = {
-  /** 전체 레시피를 평가해 점수순으로 정렬 */
-  recommend(recipes, ctx, limit = 10) {
+  /** 전체 레시피를 평가해 점수순으로 정렬
+      기본은 자르지 않습니다. 부적합 항목은 fit === 'mismatch'로 표시되어
+      화면에서 따로 묶이므로, 임의로 잘라내면 조용히 사라지는 레시피가 생깁니다. */
+  recommend(recipes, ctx, limit = Infinity) {
     return recipes
       .map(r => {
         const s = Score.evaluate(r, ctx);
@@ -385,7 +387,7 @@ const Engine = {
         const mm = (a.fit === 'mismatch') - (b.fit === 'mismatch');
         return mm || b.score - a.score || a.recipe.difficulty - b.recipe.difficulty;
       })
-      .slice(0, limit);
+      .slice(0, limit === Infinity ? undefined : limit);
   },
 
   /** 점수 항목 → 화면에 띄울 근거 목록 {type, key, vars} */

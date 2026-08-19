@@ -174,12 +174,69 @@ console.log('\n[Phase 1d — 전체 루프]');
   ok(!empty.includes('undefined'), '빈 로그 화면 렌더');
 }
 
+console.log('\n[Phase 2 — 아카이브]');
+{
+  App.archive={type:'all',geometry:null,roast:null,difficulty:null,openId:null};
+  App.page='archive';
+  const h=App.viewArchive();
+  ok(h.length>1000&&!h.includes('undefined')&&!h.includes('NaN'), `아카이브 목록 (${h.length}자)`);
+  ok(App.archiveList().length===Data.recipes.length, `필터 없으면 전체 ${App.archiveList().length}종`);
+
+  App.archive.type='championship';
+  const champ=App.archiveList();
+  ok(champ.length===7, `챔피언 필터 ${champ.length}종`);
+  ok(champ[0].author.year===2025, `최신 연도 우선 (${champ[0].author.year})`);
+  ok(champ.every((r,i,a)=>i===0||a[i-1].author.year>=r.author.year), '연도 내림차순');
+
+  App.archive.type='all'; App.archive.geometry='flat';
+  ok(App.archiveList().every(r=>Data.byId.brewer[r.equipment.brewer_id].geometry==='flat'),
+     `평면 드리퍼 필터 ${App.archiveList().length}종`);
+
+  App.archive.geometry=null; App.archive.difficulty=4;
+  const d4=App.archiveList();
+  ok(d4.length===3, `난이도 4 구간이 채워짐 (${d4.length}종)`);
+
+  App.archive={type:'all',geometry:null,roast:null,difficulty:null,openId:null};
+
+  // 단계별 온도가 있는 레시피의 상세
+  for (const id of ['wbrc-2018-fukahori-final','wbrc-2021-winton-final','wbrc-2022-hsu-final','kasuya-46']) {
+    App.archive.openId=id; App.page='archive-detail';
+    try {
+      const d=App.viewArchiveDetail();
+      ok(d.length>1000&&!d.includes('undefined')&&!d.includes('NaN'), `상세 ${id} (${d.length}자)`);
+    } catch(e){ ok(false,`상세 ${id} 예외: ${e.message}`); }
+  }
+
+  // 온도 배지는 바뀔 때만
+  App.archive.openId='wbrc-2018-fukahori-final';
+  const fk=App.viewArchiveDetail();
+  const badges=(fk.match(/temp-badge/g)||[]).length;
+  ok(badges===2, `Fukahori 80→95→80 에서 배지 2개 (${badges}개)`);
+  App.archive.openId='kasuya-46';
+  const ks=App.viewArchiveDetail();
+  ok((ks.match(/temp-badge/g)||[]).length===0, '단일 온도 레시피는 배지 없음');
+
+  // 아카이브 → 추출로 이어지는지 (추천 결과에 없는 레시피도)
+  App.results=null;
+  App.openBrew('wbrc-2018-fukahori-final');
+  ok(App.page==='brew-prep', `아카이브에서 바로 추출 준비로 (${App.page})`);
+  ok(App.brew.plan.timeline.length>0, `타임라인 ${App.brew.plan.timeline.length}단계`);
+  const pp=App.viewBrewPrep();
+  ok(pp.includes('temp-badge'), '준비 화면에도 온도 배지');
+  App.runRecommend();
+}
+
 console.log('\n[영어 — 로그 화면]');
 {
   await Data.loadDict('en'); I18n.setLang('en');
   App.logs=[]; const e1=App.viewLogs();
   const kk=[...new Set((e1.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
   ok(kk.length===0, '영어 로그 화면에 한글 없음'+(kk.length?` → ${JSON.stringify(kk)}`:''));
+
+  App.page='archive'; App.archive={type:'all',geometry:null,roast:null,difficulty:null,openId:null};
+  const e2=App.viewArchive();
+  const kk2=[...new Set((e2.match(/[가-힣][가-힣 ·+~()0-9]*/g)||[]))].filter(x=>x!=='한국어');
+  ok(kk2.length===0, '영어 아카이브 목록에 한글 없음'+(kk2.length?` → ${JSON.stringify(kk2)}`:''));
   await Data.loadDict('ko'); I18n.setLang('ko');
 }
 

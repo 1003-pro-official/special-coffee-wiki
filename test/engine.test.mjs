@@ -143,11 +143,15 @@ console.log('\n════ Engine.recommend — 실제 시나리오 ═══�
   const res = Engine.recommend(recipes, c);
   console.log('   순위:');
   res.forEach((x,i)=>console.log(`     ${i+1}. ${String(x.score).padStart(3)}점  ${x.recipe.id}`));
-  ok(res.length === recipes.length, '전체 레시피 평가');
+  ok(res.length === recipes.length, `전체 레시피 평가 — 잘라내지 않음 (${res.length}/${recipes.length})`);
+  ok(Engine.recommend(recipes, c, 3).length === 3, 'limit 인자를 주면 자름');
   ok(res[0].score >= res[res.length-1].score, '점수 내림차순');
   ok(['high-agitation-light','hoffmann-v60','kasuya-46'].includes(res[0].recipe.id),
      `라이트+클래리티+V60 → 상위가 타당 (1위 ${res[0].recipe.id})`);
-  ok(res.findIndex(x=>x.recipe.id==='melitta-onepot') >= res.length-3, '멜리타는 하위권');
+  const mmIds = res.filter(x=>x.fit==='mismatch').map(x=>x.recipe.id);
+  ok(mmIds.includes('melitta-onepot'), `멜리타는 부적합 분류 (부적합 ${mmIds.length}종)`);
+  ok(res.filter(x=>x.fit!=='mismatch').every((x,i,a)=> i===0 || a[i-1].score>=x.score), '적합군 내림차순');
+  ok(res.findIndex(x=>x.fit==='mismatch') > res.findLastIndex(x=>x.fit!=='mismatch'), '부적합은 전부 뒤로');
 
   const why = Engine.reasons(res[0], c);
   ok(why.length >= 2, `근거 ${why.length}줄 생성`);

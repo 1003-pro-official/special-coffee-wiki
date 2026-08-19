@@ -9,7 +9,7 @@
 
 ## 현재 상태
 
-**Phase 1 완료** — 원두를 입력하면 추천 → 추출 가이드 → 기록까지 한 흐름으로 이어집니다.
+**Phase 2 완료** — 추천 → 추출 → 기록 흐름에 챔피언 레시피 아카이브가 붙었습니다.
 
 | 구분 | 상태 |
 |---|---|
@@ -21,6 +21,7 @@
 | **앱 — 추천 엔진** | **동작** — `assets/engine.js` |
 | **앱 — 추출 가이드** | **동작** — `assets/brew.js` |
 | **앱 — 브루잉 로그** | **동작** — `assets/logs.js` |
+| **앱 — 레시피 아카이브** | **동작** — 필터 · 세로 타임라인 |
 
 ---
 
@@ -55,26 +56,26 @@ data/
   ├─ brewers.json       드리퍼 17
   ├─ grinders.json      그라인더 21 + 앵커
   ├─ flavor-nodes.json  향미 용어 83
-  ├─ recipes.json       레시피 9
+  ├─ recipes.json       레시피 15
   └─ i18n/
       ├─ ko.json        UI 문자열 (한국어)
       ├─ en.json        UI 문자열 (영어)
       └─ terms.json     열거형 코드 → 표시명 사전
 test/
-  ├─ engine.test.mjs    추천 엔진 40건
+  ├─ engine.test.mjs    추천 엔진 43건
   ├─ brew.test.mjs      추출 타임라인 44건
   ├─ logs.test.mjs      로그 저장 · 내보내기 44건
-  └─ ui.smoke.mjs       화면 렌더 · 전체 루프 31건
+  └─ ui.smoke.mjs       화면 렌더 · 전체 루프 48건
 docs/                   기획서 · 디자인 시스템 · 목업 · 업로드 절차
 ```
 
 ### 테스트
 
 ```bash
-node test/engine.test.mjs   # 추천 엔진 40건
+node test/engine.test.mjs   # 추천 엔진 43건
 node test/brew.test.mjs     # 추출 타임라인 44건
 node test/logs.test.mjs     # 로그 저장 · 내보내기 44건
-node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 31건
+node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 48건
 ```
 
 `engine.js`와 `brew.js`에는 DOM 의존이 없어 Node에서 그대로 돌아갑니다.
@@ -90,8 +91,8 @@ node test/ui.smoke.mjs      # 화면 렌더 · 전체 루프 31건
 | [`data/brewers.json`](data/brewers.json) | 드리퍼 카탈로그 | 17 |
 | [`data/grinders.json`](data/grinders.json) | 그라인더 카탈로그 + 분쇄도 앵커 | 21 |
 | [`data/flavor-nodes.json`](data/flavor-nodes.json) | 향미 용어 계층 (L1 9 · L2 28 · L3 46) | 83 |
-| [`data/recipes.json`](data/recipes.json) | 표준 레시피 8 + 챔피언 1 | 9 |
-| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 217 |
+| [`data/recipes.json`](data/recipes.json) | 표준 8 + 챔피언 7 (2018~2025) | 15 |
+| [`data/i18n/ko.json`](data/i18n/ko.json) · [`en.json`](data/i18n/en.json) | UI 문자열 | 각 242 |
 | [`data/i18n/terms.json`](data/i18n/terms.json) | 열거형 코드 사전 | 14종 |
 
 미작성: `data/beans.json`
@@ -196,6 +197,26 @@ rAF는 화면을 다시 그리는 용도로만 씁니다.
 
 ---
 
+## 수록 챔피언 레시피
+
+| 연도 | 챔피언 | 국가 | 드리퍼 | 특징 |
+|---|---|---|---|---|
+| 2025 | George Peng | China | Solo Dripper | 3종 로스트 블렌딩 · 40ppm 저미네랄 물 |
+| 2024 | Martin Wölfl | Austria | Orea V4 | Sibarist FAST 필터 · 2분 내 전량 투입 |
+| 2023 | Carlos Medina | Chile | Origami | 50g씩 5회, 30초 고정 리듬 |
+| 2022 | Shih Yuan Hsu | Taiwan | Orea + Kalita 필터 | 두 분쇄도 혼합 · 70 → 95 °C |
+| 2021 | Matt Winton | Switzerland | V60 | 주전자 2개 · 93 → 88 °C |
+| 2019 | Du Jianing | China | Origami | 이중 분쇄 + 채프 제거 · 총 1:40 |
+| 2018 | Emi Fukahori | Switzerland | Hario Switch | 침지 → 투과 · 80 → 95 → 80 °C |
+
+**단계별 온도**를 쓰는 레시피가 셋(2018 · 2021 · 2022)이라 `steps[].temp_c`를 선택 필드로 추가했습니다.
+화면에서는 **직전 단계와 온도가 달라질 때만** 배지를 띄웁니다. 매 줄에 붙이면 정보가 아니라 소음이 됩니다.
+
+파라미터는 전부 출처를 대조했고, 출처에 없어 추정한 값(푸어 간격, 드로우다운 종료 시각 등)은
+각 레시피의 `verify_note`에 무엇을 추정했는지 남겼습니다.
+
+---
+
 ## 저작권
 
 ### SCA Coffee Taster's Flavor Wheel
@@ -239,7 +260,7 @@ SCA 휠은 [CC BY-NC-ND 4.0](https://sca.coffee/research/coffee-tasters-flavor-w
 - [x] **Phase 1b** — 추천 엔진 (스코어링 + 장비 변환)
 - [x] **Phase 1c** — 추출 가이드 (타이머 · 진동 · Wake Lock)
 - [x] **Phase 1d** — 브루잉 로그 (저장 + JSON 내보내기)
-- [ ] **Phase 2** — 챔피언 레시피 아카이브 (12~15개)
+- [x] **Phase 2** — 챔피언 레시피 아카이브 (15종)
 - [ ] **Phase 3** — 플레이버 탐색 (드릴다운 휠)
 - [ ] **Phase 4** — 분석 · 위키 문서 · BLE 저울 연동 검토
 

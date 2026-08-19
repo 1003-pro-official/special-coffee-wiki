@@ -2,78 +2,186 @@
   "_meta": {
     "schema_version": "0.3",
     "updated": "2026-08-14",
-
-    "구성": "표준 레시피 8개 + 챔피언 레시피 1개(형식 예시). 챔피언 3~4개 추가는 Phase 2.",
-
+    "구성": "표준 레시피 8개 + 챔피언 레시피 7개(2018~2025). Phase 2에서 챔피언 6명 추가.",
     "원칙": [
       "파라미터(숫자)는 사실 정보이므로 사용 가능합니다. 원문 기사 본문은 옮기지 않고 출처 링크만 답니다.",
       "curator_commentary는 공부하면서 직접 채웁니다. 지금은 전부 null이고 폴백 배지가 표시됩니다.",
       "summary는 '무엇을 하는 레시피인가'에 대한 사실 서술입니다. 해석·평가가 아니므로 지금 채웠습니다."
     ],
-
     "grind_band": "grinders.json의 앵커(V60 표준 = 0)로부터의 상대 오프셋. 사용자 그라인더의 step_per_band로 실제 클릭 수를 계산합니다.",
     "steps": "cumulative_g는 누적 물량(저울 표시와 일치). start_s는 타이머 시작 기준 절대 시각.",
-    "정확도": "출처가 여러 곳인 레시피는 값이 조금씩 다릅니다. 각 항목의 source_urls를 확인하고, 다르면 verified를 false로 두었습니다."
+    "정확도": "출처가 여러 곳인 레시피는 값이 조금씩 다릅니다. 각 항목의 source_urls를 확인하고, 다르면 verified를 false로 두었습니다.",
+    "단계별_온도": [
+      "여러 챔피언 레시피가 단계마다 다른 물 온도를 씁니다(2018 Fukahori 80→95→80, 2021 Winton 93→88, 2022 Hsu 70→95).",
+      "그래서 steps[].temp_c를 선택 필드로 추가했습니다. 없으면 water.temp_c를 따릅니다.",
+      "추출 가이드는 직전 단계와 온도가 달라질 때만 화면에 표시합니다."
+    ]
   },
-
   "recipes": [
-
     {
       "id": "hoffmann-v60",
-      "title": { "ko": "Hoffmann V60 (2회 푸어)", "en": "Hoffmann V60 (2 pours)" },
+      "title": {
+        "ko": "Hoffmann V60 (2회 푸어)",
+        "en": "Hoffmann V60 (2 pours)"
+      },
       "source_type": "standard",
-      "author": { "name": "James Hoffmann", "country": "UK", "competition": null, "year": 2020, "placement": null },
-
+      "author": {
+        "name": "James Hoffmann",
+        "country": "UK",
+        "competition": null,
+        "year": 2020,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "hario-v60-02-plastic",
-        "compatible_brewers": ["hario-v60-02-ceramic", "origami-m-ceramic", "timemore-crystal-eye", "april-plastic"],
+        "compatible_brewers": [
+          "hario-v60-02-ceramic",
+          "origami-m-ceramic",
+          "timemore-crystal-eye",
+          "april-plastic"
+        ],
         "filter": "hario-v60-bleached",
         "grind_band": 0,
         "grind_original_note": "원본 표기: medium-fine",
-        "extras": ["gooseneck kettle", "scale"]
+        "extras": [
+          "gooseneck kettle",
+          "scale"
+        ]
       },
-
       "coffee": {
         "dose_g": 30,
         "special_note": null,
         "suited_for": {
-          "roast_levels": ["light", "light-medium", "medium"],
-          "processes": ["washed", "natural", "honey"],
-          "flavor_families": ["fruity", "floral", "sweet", "nutty_cocoa"],
+          "roast_levels": [
+            "light",
+            "light-medium",
+            "medium"
+          ],
+          "processes": [
+            "washed",
+            "natural",
+            "honey"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sweet",
+            "nutty_cocoa"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 500, "ratio": "1:16.7", "temp_c": 95, "tds_ppm": null, "profile_note": null },
-
+      "water": {
+        "total_g": 500,
+        "ratio": "1:16.7",
+        "temp_c": 95,
+        "tds_ppm": null,
+        "profile_note": null
+      },
       "steps": [
-        { "index":0, "type":"preheat",  "water_g":null, "note":{"ko":"필터 린싱 + 드리퍼 예열","en":"Rinse filter and preheat brewer"} },
-        { "index":1, "type":"bloom",    "cumulative_g":60,  "start_s":0,   "pour_s":10, "wait_s":35,
-          "style":{"ko":"부은 뒤 반시계로 스월링해 전체 적심","en":"Pour, then swirl counter-clockwise to wet all grounds"} },
-        { "index":2, "type":"pour",     "cumulative_g":300, "start_s":45,  "pour_s":30, "wait_s":0,
-          "style":{"ko":"나선","en":"Spiral"} },
-        { "index":3, "type":"pour",     "cumulative_g":500, "start_s":75,  "pour_s":30, "wait_s":0,
-          "style":{"ko":"부드럽게 나선","en":"Gentle spiral"} },
-        { "index":4, "type":"agitate",  "cumulative_g":500, "start_s":105, "pour_s":0,  "wait_s":10,
-          "style":{"ko":"시계/반시계로 가볍게 저어 벽면 가루를 떨어뜨림","en":"Stir gently both directions to knock grounds off the walls"} },
-        { "index":5, "type":"agitate",  "cumulative_g":500, "start_s":115, "pour_s":0,  "wait_s":0,
-          "style":{"ko":"드리퍼를 살짝 스월링해 베드를 평평하게","en":"Swirl the brewer to flatten the bed"} },
-        { "index":6, "type":"drawdown", "cumulative_g":500, "target_end_s":210, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 드리퍼 예열",
+            "en": "Rinse filter and preheat brewer"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 60,
+          "start_s": 0,
+          "pour_s": 10,
+          "wait_s": 35,
+          "style": {
+            "ko": "부은 뒤 반시계로 스월링해 전체 적심",
+            "en": "Pour, then swirl counter-clockwise to wet all grounds"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 300,
+          "start_s": 45,
+          "pour_s": 30,
+          "wait_s": 0,
+          "style": {
+            "ko": "나선",
+            "en": "Spiral"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 500,
+          "start_s": 75,
+          "pour_s": 30,
+          "wait_s": 0,
+          "style": {
+            "ko": "부드럽게 나선",
+            "en": "Gentle spiral"
+          }
+        },
+        {
+          "index": 4,
+          "type": "agitate",
+          "cumulative_g": 500,
+          "start_s": 105,
+          "pour_s": 0,
+          "wait_s": 10,
+          "style": {
+            "ko": "시계/반시계로 가볍게 저어 벽면 가루를 떨어뜨림",
+            "en": "Stir gently both directions to knock grounds off the walls"
+          }
+        },
+        {
+          "index": 5,
+          "type": "agitate",
+          "cumulative_g": 500,
+          "start_s": 115,
+          "pour_s": 0,
+          "wait_s": 0,
+          "style": {
+            "ko": "드리퍼를 살짝 스월링해 베드를 평평하게",
+            "en": "Swirl the brewer to flatten the bed"
+          }
+        },
+        {
+          "index": 6,
+          "type": "drawdown",
+          "cumulative_g": 500,
+          "target_end_s": 210,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 210, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["swirl", "two-pour", "flat bed"],
-      "goal_tags": ["balance", "sweetness"],
+      "targets": {
+        "total_time_s": 210,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "swirl",
+        "two-pour",
+        "flat bed"
+      ],
+      "goal_tags": [
+        "balance",
+        "sweetness"
+      ],
       "difficulty": 2,
       "requires_extras": [],
-
       "summary": {
         "ko": "블룸 후 두 번의 큰 푸어로만 물을 채우고, 마지막에 젓기와 스월링으로 커피 베드를 평평하게 만드는 구조. 푸어 횟수가 적어 재현하기 쉽습니다.",
         "en": "Two large pours after the bloom, finished with a stir and swirl to flatten the bed. Few pours means it is easy to repeat consistently.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [
         "https://honestcoffeeguide.com/brew-recipes/james-hoffmann-v60/",
         "https://www.hario-europe.com/blogs/hario-community/v60-ambassadors-james-hoffmann"
@@ -81,22 +189,36 @@
       "verified": true,
       "my_variant_of": null
     },
-
     {
       "id": "kasuya-46",
-      "title": { "ko": "Tetsu Kasuya 4:6", "en": "Tetsu Kasuya 4:6" },
+      "title": {
+        "ko": "Tetsu Kasuya 4:6",
+        "en": "Tetsu Kasuya 4:6"
+      },
       "source_type": "standard",
-      "author": { "name": "Tetsu Kasuya", "country": "Japan", "competition": "World Brewers Cup", "year": 2016, "placement": 1 },
-
+      "author": {
+        "name": "Tetsu Kasuya",
+        "country": "Japan",
+        "competition": "World Brewers Cup",
+        "year": 2016,
+        "placement": 1
+      },
       "equipment": {
         "brewer_id": "hario-v60-02-plastic",
-        "compatible_brewers": ["hario-v60-02-ceramic", "origami-m-ceramic", "timemore-crystal-eye"],
+        "compatible_brewers": [
+          "hario-v60-02-ceramic",
+          "origami-m-ceramic",
+          "timemore-crystal-eye"
+        ],
         "filter": "hario-v60-bleached",
         "grind_band": 2,
         "grind_original_note": "원본 표기: coarse (굵은 소금 정도)",
-        "extras": ["gooseneck kettle", "scale", "timer"]
+        "extras": [
+          "gooseneck kettle",
+          "scale",
+          "timer"
+        ]
       },
-
       "coffee": {
         "dose_g": 20,
         "special_note": {
@@ -104,51 +226,184 @@
           "en": "The first 40% (2 pours) sets the acidity–sweetness balance; the last 60% (3 pours) sets strength. Each half is tuned independently."
         },
         "suited_for": {
-          "roast_levels": ["light", "light-medium", "medium"],
-          "processes": ["washed", "natural"],
-          "flavor_families": ["fruity", "floral", "sweet"],
+          "roast_levels": [
+            "light",
+            "light-medium",
+            "medium"
+          ],
+          "processes": [
+            "washed",
+            "natural"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sweet"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 300, "ratio": "1:15", "temp_c": 92, "tds_ppm": null,
-        "profile_note": { "ko": "중볶음 이상은 88~90°C로 낮춥니다", "en": "Drop to 88–90 °C for darker roasts" } },
-
+      "water": {
+        "total_g": 300,
+        "ratio": "1:15",
+        "temp_c": 92,
+        "tds_ppm": null,
+        "profile_note": {
+          "ko": "중볶음 이상은 88~90°C로 낮춥니다",
+          "en": "Drop to 88–90 °C for darker roasts"
+        }
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱 + 예열","en":"Rinse filter and preheat"} },
-        { "index":1, "type":"bloom", "cumulative_g":60,  "start_s":0,   "pour_s":10, "wait_s":35,
-          "style":{"ko":"1투 — 산미·단맛 구간","en":"Pour 1 — balance section"} },
-        { "index":2, "type":"pour",  "cumulative_g":120, "start_s":45,  "pour_s":10, "wait_s":35,
-          "style":{"ko":"2투 — 여기까지가 앞 40%","en":"Pour 2 — end of the first 40%"} },
-        { "index":3, "type":"pour",  "cumulative_g":180, "start_s":90,  "pour_s":10, "wait_s":35,
-          "style":{"ko":"3투 — 농도 구간 시작","en":"Pour 3 — strength section begins"} },
-        { "index":4, "type":"pour",  "cumulative_g":240, "start_s":135, "pour_s":10, "wait_s":35,
-          "style":{"ko":"4투","en":"Pour 4"} },
-        { "index":5, "type":"pour",  "cumulative_g":300, "start_s":180, "pour_s":10, "wait_s":0,
-          "style":{"ko":"5투","en":"Pour 5"} },
-        { "index":6, "type":"drawdown", "cumulative_g":300, "target_end_s":210, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 예열",
+            "en": "Rinse filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 60,
+          "start_s": 0,
+          "pour_s": 10,
+          "wait_s": 35,
+          "style": {
+            "ko": "1투 — 산미·단맛 구간",
+            "en": "Pour 1 — balance section"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 120,
+          "start_s": 45,
+          "pour_s": 10,
+          "wait_s": 35,
+          "style": {
+            "ko": "2투 — 여기까지가 앞 40%",
+            "en": "Pour 2 — end of the first 40%"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 180,
+          "start_s": 90,
+          "pour_s": 10,
+          "wait_s": 35,
+          "style": {
+            "ko": "3투 — 농도 구간 시작",
+            "en": "Pour 3 — strength section begins"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 240,
+          "start_s": 135,
+          "pour_s": 10,
+          "wait_s": 35,
+          "style": {
+            "ko": "4투",
+            "en": "Pour 4"
+          }
+        },
+        {
+          "index": 5,
+          "type": "pour",
+          "cumulative_g": 300,
+          "start_s": 180,
+          "pour_s": 10,
+          "wait_s": 0,
+          "style": {
+            "ko": "5투",
+            "en": "Pour 5"
+          }
+        },
+        {
+          "index": 6,
+          "type": "drawdown",
+          "cumulative_g": 300,
+          "target_end_s": 210,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 210, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["multi-pour", "coarse grind", "adjustable structure"],
-      "goal_tags": ["sweetness", "clarity", "adjustable"],
+      "targets": {
+        "total_time_s": 210,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "multi-pour",
+        "coarse grind",
+        "adjustable structure"
+      ],
+      "goal_tags": [
+        "sweetness",
+        "clarity",
+        "adjustable"
+      ],
       "difficulty": 3,
       "requires_extras": [],
-
       "variants": [
-        { "id":"sweeter",  "name":{"ko":"단맛 강조","en":"Sweeter"},  "change":{"ko":"1투 50g / 2투 70g","en":"Pour 1: 50 g, Pour 2: 70 g"} },
-        { "id":"brighter", "name":{"ko":"산미 강조","en":"Brighter"}, "change":{"ko":"1투 70g / 2투 50g","en":"Pour 1: 70 g, Pour 2: 50 g"} },
-        { "id":"stronger", "name":{"ko":"진하게","en":"Stronger"},   "change":{"ko":"뒤 60%를 4회로 나눔","en":"Split the last 60% into 4 pours"} },
-        { "id":"lighter",  "name":{"ko":"연하게","en":"Lighter"},    "change":{"ko":"뒤 60%를 2회로 나눔","en":"Split the last 60% into 2 pours"} }
+        {
+          "id": "sweeter",
+          "name": {
+            "ko": "단맛 강조",
+            "en": "Sweeter"
+          },
+          "change": {
+            "ko": "1투 50g / 2투 70g",
+            "en": "Pour 1: 50 g, Pour 2: 70 g"
+          }
+        },
+        {
+          "id": "brighter",
+          "name": {
+            "ko": "산미 강조",
+            "en": "Brighter"
+          },
+          "change": {
+            "ko": "1투 70g / 2투 50g",
+            "en": "Pour 1: 70 g, Pour 2: 50 g"
+          }
+        },
+        {
+          "id": "stronger",
+          "name": {
+            "ko": "진하게",
+            "en": "Stronger"
+          },
+          "change": {
+            "ko": "뒤 60%를 4회로 나눔",
+            "en": "Split the last 60% into 4 pours"
+          }
+        },
+        {
+          "id": "lighter",
+          "name": {
+            "ko": "연하게",
+            "en": "Lighter"
+          },
+          "change": {
+            "ko": "뒤 60%를 2회로 나눔",
+            "en": "Split the last 60% into 2 pours"
+          }
+        }
       ],
-
       "summary": {
         "ko": "물을 40%와 60%로 나누고, 각 구간의 분할 횟수와 배분을 바꿔 맛을 의도적으로 설계하는 방식. 어떤 변수가 어떤 맛을 만드는지 배우기에 가장 좋은 구조입니다.",
         "en": "Water is split 40/60, and the number and size of pours in each half are changed to design the cup deliberately. The clearest structure for learning which variable produces which result.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [
         "https://honestcoffeeguide.com/brew-recipes/tetsu-kasuya-4-6-method/",
         "https://projectbarista.com/4-6-method-recipe/"
@@ -156,63 +411,171 @@
       "verified": true,
       "my_variant_of": null
     },
-
     {
       "id": "kalita-wave-standard",
-      "title": { "ko": "Kalita Wave 표준 (다회 푸어)", "en": "Kalita Wave standard (multi-pour)" },
+      "title": {
+        "ko": "Kalita Wave 표준 (다회 푸어)",
+        "en": "Kalita Wave standard (multi-pour)"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "kalita-wave-185-steel",
-        "compatible_brewers": ["kalita-wave-155-steel", "fellow-stagg-x", "origami-m-ceramic"],
+        "compatible_brewers": [
+          "kalita-wave-155-steel",
+          "fellow-stagg-x",
+          "origami-m-ceramic"
+        ],
         "filter": "kalita-wave-185",
         "grind_band": 1,
         "grind_original_note": "원본 표기: medium",
-        "extras": ["gooseneck kettle", "scale"]
+        "extras": [
+          "gooseneck kettle",
+          "scale"
+        ]
       },
-
       "coffee": {
         "dose_g": 22,
         "special_note": null,
         "suited_for": {
-          "roast_levels": ["light-medium", "medium", "medium-dark", "full-city"],
-          "processes": ["washed", "natural", "honey"],
-          "flavor_families": ["sweet", "nutty_cocoa", "fruity", "roasted"],
+          "roast_levels": [
+            "light-medium",
+            "medium",
+            "medium-dark",
+            "full-city"
+          ],
+          "processes": [
+            "washed",
+            "natural",
+            "honey"
+          ],
+          "flavor_families": [
+            "sweet",
+            "nutty_cocoa",
+            "fruity",
+            "roasted"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 350, "ratio": "1:16", "temp_c": 93, "tds_ppm": null, "profile_note": null },
-
+      "water": {
+        "total_g": 350,
+        "ratio": "1:16",
+        "temp_c": 93,
+        "tds_ppm": null,
+        "profile_note": null
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"웨이브 필터 린싱 + 예열","en":"Rinse the wave filter and preheat"} },
-        { "index":1, "type":"bloom", "cumulative_g":50,  "start_s":0,   "pour_s":8,  "wait_s":22,
-          "style":{"ko":"중앙에서 작게 나선","en":"Small spiral from the center"} },
-        { "index":2, "type":"pour",  "cumulative_g":125, "start_s":30,  "pour_s":15, "wait_s":15,
-          "style":{"ko":"중앙 위주, 벽면을 피함","en":"Center focused, avoid the walls"} },
-        { "index":3, "type":"pour",  "cumulative_g":200, "start_s":60,  "pour_s":15, "wait_s":15,
-          "style":{"ko":"중앙 위주","en":"Center focused"} },
-        { "index":4, "type":"pour",  "cumulative_g":275, "start_s":90,  "pour_s":15, "wait_s":15,
-          "style":{"ko":"중앙 위주","en":"Center focused"} },
-        { "index":5, "type":"pour",  "cumulative_g":350, "start_s":120, "pour_s":15, "wait_s":0,
-          "style":{"ko":"중앙 위주","en":"Center focused"} },
-        { "index":6, "type":"drawdown", "cumulative_g":350, "target_end_s":215, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "웨이브 필터 린싱 + 예열",
+            "en": "Rinse the wave filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "중앙에서 작게 나선",
+            "en": "Small spiral from the center"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 125,
+          "start_s": 30,
+          "pour_s": 15,
+          "wait_s": 15,
+          "style": {
+            "ko": "중앙 위주, 벽면을 피함",
+            "en": "Center focused, avoid the walls"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 200,
+          "start_s": 60,
+          "pour_s": 15,
+          "wait_s": 15,
+          "style": {
+            "ko": "중앙 위주",
+            "en": "Center focused"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 275,
+          "start_s": 90,
+          "pour_s": 15,
+          "wait_s": 15,
+          "style": {
+            "ko": "중앙 위주",
+            "en": "Center focused"
+          }
+        },
+        {
+          "index": 5,
+          "type": "pour",
+          "cumulative_g": 350,
+          "start_s": 120,
+          "pour_s": 15,
+          "wait_s": 0,
+          "style": {
+            "ko": "중앙 위주",
+            "en": "Center focused"
+          }
+        },
+        {
+          "index": 6,
+          "type": "drawdown",
+          "cumulative_g": 350,
+          "target_end_s": 215,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 215, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["multi-pour", "flat bottom", "center pour"],
-      "goal_tags": ["sweetness", "body", "balance"],
+      "targets": {
+        "total_time_s": 215,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "multi-pour",
+        "flat bottom",
+        "center pour"
+      ],
+      "goal_tags": [
+        "sweetness",
+        "body",
+        "balance"
+      ],
       "difficulty": 1,
       "requires_extras": [],
-
       "summary": {
         "ko": "물 높이가 바닥에 가까워질 때마다 일정량을 다시 채우는 방식. 3개 배출구가 유속 상한을 잡아줘 푸어가 다소 흔들려도 결과가 크게 변하지 않습니다.",
         "en": "Top up a fixed amount each time the water level drops near the bed. The three drain holes cap the flow rate, so an uneven pour changes the result far less than on a cone.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [
         "https://www.madcapcoffee.com/blogs/news/how-we-brew-kalita-185-recipe",
         "https://kaldiscoffee.com/blogs/recipes/kalita-wave-185-pour-over-how-to-beginner"
@@ -221,22 +584,36 @@
       "verify_note": "출처마다 도징(22~25g)과 푸어 분할이 다릅니다. 여기 값은 22g / 350g 기준으로 정리한 것입니다.",
       "my_variant_of": null
     },
-
     {
       "id": "high-agitation-light",
-      "title": { "ko": "고교반 라이트 로스트 (Rao·Perger 계열)", "en": "High-agitation light roast (Rao / Perger style)" },
+      "title": {
+        "ko": "고교반 라이트 로스트 (Rao·Perger 계열)",
+        "en": "High-agitation light roast (Rao / Perger style)"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "hario-v60-02-plastic",
-        "compatible_brewers": ["origami-m-ceramic", "orea-v4", "april-plastic"],
+        "compatible_brewers": [
+          "origami-m-ceramic",
+          "orea-v4",
+          "april-plastic"
+        ],
         "filter": "hario-v60-bleached",
         "grind_band": -1,
         "grind_original_note": "원본 표기: fine (드립 기준으로 곱게)",
-        "extras": ["gooseneck kettle", "scale", "stir stick"]
+        "extras": [
+          "gooseneck kettle",
+          "scale",
+          "stir stick"
+        ]
       },
-
       "coffee": {
         "dose_g": 20,
         "special_note": {
@@ -244,54 +621,146 @@
           "en": "Light roasts resist extraction. This approach grinds finer and adds agitation to push extraction yield up."
         },
         "suited_for": {
-          "roast_levels": ["light"],
-          "processes": ["washed"],
-          "flavor_families": ["fruity", "floral", "sour_fermented"],
-          "varieties": ["geisha", "sl28", "heirloom"]
+          "roast_levels": [
+            "light"
+          ],
+          "processes": [
+            "washed"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sour_fermented"
+          ],
+          "varieties": [
+            "geisha",
+            "sl28",
+            "heirloom"
+          ]
         }
       },
-
-      "water": { "total_g": 320, "ratio": "1:16", "temp_c": 99, "tds_ppm": null,
-        "profile_note": { "ko": "라이트 로스트는 끓기 직전 온도까지 올립니다", "en": "Use near-boiling water for light roasts" } },
-
+      "water": {
+        "total_g": 320,
+        "ratio": "1:16",
+        "temp_c": 99,
+        "tds_ppm": null,
+        "profile_note": {
+          "ko": "라이트 로스트는 끓기 직전 온도까지 올립니다",
+          "en": "Use near-boiling water for light roasts"
+        }
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱 + 예열","en":"Rinse filter and preheat"} },
-        { "index":1, "type":"bloom", "cumulative_g":60,  "start_s":0,  "pour_s":8, "wait_s":7,
-          "style":{"ko":"부은 즉시 스틱으로 강하게 저음","en":"Pour, then stir vigorously with a stick"} },
-        { "index":2, "type":"wait",  "cumulative_g":60,  "start_s":15, "pour_s":0, "wait_s":30,
-          "style":{"ko":"블룸 유지","en":"Let it bloom"} },
-        { "index":3, "type":"pour",  "cumulative_g":320, "start_s":45, "pour_s":40, "wait_s":0,
-          "style":{"ko":"끊지 않고 한 번에, 넓게 나선","en":"One continuous wide spiral"} },
-        { "index":4, "type":"agitate","cumulative_g":320,"start_s":85, "pour_s":0, "wait_s":0,
-          "style":{"ko":"드리퍼를 스월링해 베드를 평평하게","en":"Swirl the brewer to flatten the bed"} },
-        { "index":5, "type":"drawdown","cumulative_g":320,"target_end_s":180,"remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 예열",
+            "en": "Rinse filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 60,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 7,
+          "style": {
+            "ko": "부은 즉시 스틱으로 강하게 저음",
+            "en": "Pour, then stir vigorously with a stick"
+          }
+        },
+        {
+          "index": 2,
+          "type": "wait",
+          "cumulative_g": 60,
+          "start_s": 15,
+          "pour_s": 0,
+          "wait_s": 30,
+          "style": {
+            "ko": "블룸 유지",
+            "en": "Let it bloom"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 320,
+          "start_s": 45,
+          "pour_s": 40,
+          "wait_s": 0,
+          "style": {
+            "ko": "끊지 않고 한 번에, 넓게 나선",
+            "en": "One continuous wide spiral"
+          }
+        },
+        {
+          "index": 4,
+          "type": "agitate",
+          "cumulative_g": 320,
+          "start_s": 85,
+          "pour_s": 0,
+          "wait_s": 0,
+          "style": {
+            "ko": "드리퍼를 스월링해 베드를 평평하게",
+            "en": "Swirl the brewer to flatten the bed"
+          }
+        },
+        {
+          "index": 5,
+          "type": "drawdown",
+          "cumulative_g": 320,
+          "target_end_s": 180,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 180, "tds_pct": 1.4, "extraction_yield_pct": 22.0 },
-      "technique_tags": ["high agitation", "fine grind", "high extraction", "single continuous pour"],
-      "goal_tags": ["clarity", "acidity"],
+      "targets": {
+        "total_time_s": 180,
+        "tds_pct": 1.4,
+        "extraction_yield_pct": 22.0
+      },
+      "technique_tags": [
+        "high agitation",
+        "fine grind",
+        "high extraction",
+        "single continuous pour"
+      ],
+      "goal_tags": [
+        "clarity",
+        "acidity"
+      ],
       "difficulty": 3,
       "requires_extras": [],
-
       "summary": {
         "ko": "곱게 갈고 강하게 저어 수율을 높이는 방식. 라이트 로스트에서 신맛만 남고 단맛이 안 나올 때 시도할 방향입니다. 중볶음 이상에 쓰면 쉽게 과추출됩니다.",
         "en": "Finer grind plus strong agitation to raise extraction yield. Worth trying when a light roast tastes only sour with no sweetness. Easily over-extracts on medium or darker roasts.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [],
       "verified": false,
       "verify_note": "특정 인물의 공식 레시피가 아니라 고교반·고수율 접근을 일반화한 것입니다. 출처를 특정 인물로 표기하지 않았습니다.",
       "my_variant_of": null
     },
-
     {
       "id": "melitta-onepot",
-      "title": { "ko": "멜리타 원팟", "en": "Melitta one-pot" },
+      "title": {
+        "ko": "멜리타 원팟",
+        "en": "Melitta one-pot"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "melitta-1x2",
         "compatible_brewers": [],
@@ -300,7 +769,6 @@
         "grind_original_note": null,
         "extras": []
       },
-
       "coffee": {
         "dose_g": 15,
         "special_note": {
@@ -308,58 +776,128 @@
           "en": "Designed to work without a gooseneck kettle."
         },
         "suited_for": {
-          "roast_levels": ["medium", "medium-dark", "full-city", "dark"],
-          "processes": ["washed", "natural"],
-          "flavor_families": ["nutty_cocoa", "sweet", "roasted"],
+          "roast_levels": [
+            "medium",
+            "medium-dark",
+            "full-city",
+            "dark"
+          ],
+          "processes": [
+            "washed",
+            "natural"
+          ],
+          "flavor_families": [
+            "nutty_cocoa",
+            "sweet",
+            "roasted"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 240, "ratio": "1:16", "temp_c": 90, "tds_ppm": null, "profile_note": null },
-
+      "water": {
+        "total_g": 240,
+        "ratio": "1:16",
+        "temp_c": 90,
+        "tds_ppm": null,
+        "profile_note": null
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱","en":"Rinse the filter"} },
-        { "index":1, "type":"bloom", "cumulative_g":40,  "start_s":0,  "pour_s":8, "wait_s":37,
-          "style":{"ko":"가루가 다 젖을 만큼만","en":"Just enough to wet all grounds"} },
-        { "index":2, "type":"pour",  "cumulative_g":240, "start_s":45, "pour_s":45, "wait_s":0,
-          "style":{"ko":"천천히 한 번에 채움 — 물 높이를 넘기지 않게","en":"Fill slowly in one go, keeping the level below the rim"} },
-        { "index":3, "type":"drawdown", "cumulative_g":240, "target_end_s":240, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱",
+            "en": "Rinse the filter"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 40,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 37,
+          "style": {
+            "ko": "가루가 다 젖을 만큼만",
+            "en": "Just enough to wet all grounds"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 240,
+          "start_s": 45,
+          "pour_s": 45,
+          "wait_s": 0,
+          "style": {
+            "ko": "천천히 한 번에 채움 — 물 높이를 넘기지 않게",
+            "en": "Fill slowly in one go, keeping the level below the rim"
+          }
+        },
+        {
+          "index": 3,
+          "type": "drawdown",
+          "cumulative_g": 240,
+          "target_end_s": 240,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 240, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["single pour", "restricted flow", "no gooseneck"],
-      "goal_tags": ["body", "sweetness"],
+      "targets": {
+        "total_time_s": 240,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "single pour",
+        "restricted flow",
+        "no gooseneck"
+      ],
+      "goal_tags": [
+        "body",
+        "sweetness"
+      ],
       "difficulty": 1,
       "requires_extras": [],
-
       "summary": {
         "ko": "배출구가 4mm로 작아 사실상 침지에 가깝게 동작합니다. 물을 한 번에 채우고 기다리는 구조라 푸어 기술이 거의 필요 없습니다.",
         "en": "The 4 mm outlet makes this behave close to immersion. Fill once and wait — almost no pouring technique required.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [],
       "verified": false,
       "verify_note": "멜리타 구조 특성(느린 유속, 굵은 분쇄)에 맞춰 구성한 기본형입니다.",
       "my_variant_of": null
     },
-
     {
       "id": "switch-hybrid",
-      "title": { "ko": "Hario Switch 하이브리드", "en": "Hario Switch hybrid" },
+      "title": {
+        "ko": "Hario Switch 하이브리드",
+        "en": "Hario Switch hybrid"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "hario-switch-03",
         "compatible_brewers": [],
         "filter": "hario-v60-03-bleached",
         "grind_band": 1,
         "grind_original_note": null,
-        "extras": ["scale"]
+        "extras": [
+          "scale"
+        ]
       },
-
       "coffee": {
         "dose_g": 20,
         "special_note": {
@@ -367,117 +905,291 @@
           "en": "Steep with the valve closed, then open it to drain. Pouring technique has almost no effect on the result."
         },
         "suited_for": {
-          "roast_levels": ["light", "light-medium", "medium", "medium-dark"],
-          "processes": ["washed", "natural", "honey", "anaerobic"],
-          "flavor_families": ["fruity", "floral", "sweet", "nutty_cocoa"],
+          "roast_levels": [
+            "light",
+            "light-medium",
+            "medium",
+            "medium-dark"
+          ],
+          "processes": [
+            "washed",
+            "natural",
+            "honey",
+            "anaerobic"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sweet",
+            "nutty_cocoa"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 300, "ratio": "1:15", "temp_c": 94, "tds_ppm": null, "profile_note": null },
-
+      "water": {
+        "total_g": 300,
+        "ratio": "1:15",
+        "temp_c": 94,
+        "tds_ppm": null,
+        "profile_note": null
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱 + 예열 · 밸브 닫기","en":"Rinse, preheat, close the valve"} },
-        { "index":1, "type":"bloom", "cumulative_g":60,  "start_s":0,   "pour_s":8,  "wait_s":37,
-          "style":{"ko":"밸브 닫은 채 블룸","en":"Bloom with the valve closed"} },
-        { "index":2, "type":"pour",  "cumulative_g":300, "start_s":45,  "pour_s":25, "wait_s":50,
-          "style":{"ko":"밸브 닫은 채로 전량 투입 후 침지","en":"Add all water with the valve closed, then steep"} },
-        { "index":3, "type":"valve", "cumulative_g":300, "start_s":120, "pour_s":0,  "wait_s":0,
-          "style":{"ko":"밸브 열기 — 배출 시작","en":"Open the valve to start the drain"} },
-        { "index":4, "type":"drawdown", "cumulative_g":300, "target_end_s":195, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 예열 · 밸브 닫기",
+            "en": "Rinse, preheat, close the valve"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 60,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 37,
+          "style": {
+            "ko": "밸브 닫은 채 블룸",
+            "en": "Bloom with the valve closed"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 300,
+          "start_s": 45,
+          "pour_s": 25,
+          "wait_s": 50,
+          "style": {
+            "ko": "밸브 닫은 채로 전량 투입 후 침지",
+            "en": "Add all water with the valve closed, then steep"
+          }
+        },
+        {
+          "index": 3,
+          "type": "valve",
+          "cumulative_g": 300,
+          "start_s": 120,
+          "pour_s": 0,
+          "wait_s": 0,
+          "style": {
+            "ko": "밸브 열기 — 배출 시작",
+            "en": "Open the valve to start the drain"
+          }
+        },
+        {
+          "index": 4,
+          "type": "drawdown",
+          "cumulative_g": 300,
+          "target_end_s": 195,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 195, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["immersion", "percolation", "valve control", "high repeatability"],
-      "goal_tags": ["balance", "sweetness", "repeatability"],
+      "targets": {
+        "total_time_s": 195,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "immersion",
+        "percolation",
+        "valve control",
+        "high repeatability"
+      ],
+      "goal_tags": [
+        "balance",
+        "sweetness",
+        "repeatability"
+      ],
       "difficulty": 2,
       "requires_extras": [],
-
       "summary": {
         "ko": "침지 시간이 주된 변수이므로 매번 같은 결과가 나옵니다. 원두를 서로 비교하거나 분쇄도·온도 하나만 바꿔 실험할 때 가장 적합합니다.",
         "en": "Steep time is the dominant variable, so results repeat closely. Best choice for comparing coffees or for isolating a single variable like grind or temperature.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [],
       "verified": false,
       "verify_note": "스위치는 사용자마다 침지 시간 배분이 크게 다릅니다. 기본형으로 구성했습니다.",
       "my_variant_of": null
     },
-
     {
       "id": "clever-immersion",
-      "title": { "ko": "Clever 완전 침지", "en": "Clever full immersion" },
+      "title": {
+        "ko": "Clever 완전 침지",
+        "en": "Clever full immersion"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "clever-dripper",
-        "compatible_brewers": ["hario-switch-03"],
+        "compatible_brewers": [
+          "hario-switch-03"
+        ],
         "filter": "hario-v60-02-bleached",
         "grind_band": 2,
         "grind_original_note": null,
-        "extras": ["scale", "stir stick"]
+        "extras": [
+          "scale",
+          "stir stick"
+        ]
       },
-
       "coffee": {
         "dose_g": 18,
         "special_note": null,
         "suited_for": {
-          "roast_levels": ["light", "light-medium", "medium", "medium-dark", "full-city"],
-          "processes": ["washed", "natural", "honey", "anaerobic"],
-          "flavor_families": ["fruity", "sweet", "nutty_cocoa", "floral"],
+          "roast_levels": [
+            "light",
+            "light-medium",
+            "medium",
+            "medium-dark",
+            "full-city"
+          ],
+          "processes": [
+            "washed",
+            "natural",
+            "honey",
+            "anaerobic"
+          ],
+          "flavor_families": [
+            "fruity",
+            "sweet",
+            "nutty_cocoa",
+            "floral"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 300, "ratio": "1:16.7", "temp_c": 93, "tds_ppm": null, "profile_note": null },
-
+      "water": {
+        "total_g": 300,
+        "ratio": "1:16.7",
+        "temp_c": 93,
+        "tds_ppm": null,
+        "profile_note": null
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱 + 예열","en":"Rinse filter and preheat"} },
-        { "index":1, "type":"pour",  "cumulative_g":300, "start_s":0,   "pour_s":20, "wait_s":10,
-          "style":{"ko":"전량 투입","en":"Add all the water"} },
-        { "index":2, "type":"agitate","cumulative_g":300,"start_s":30,  "pour_s":0,  "wait_s":150,
-          "style":{"ko":"가볍게 저은 뒤 뚜껑 덮고 침지","en":"Stir gently, cover, and steep"} },
-        { "index":3, "type":"release","cumulative_g":300,"start_s":180, "pour_s":0,  "wait_s":0,
-          "style":{"ko":"컵 위에 올려 배출 시작","en":"Place on the cup to release"} },
-        { "index":4, "type":"drawdown","cumulative_g":300,"target_end_s":240,"remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 예열",
+            "en": "Rinse filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "pour",
+          "cumulative_g": 300,
+          "start_s": 0,
+          "pour_s": 20,
+          "wait_s": 10,
+          "style": {
+            "ko": "전량 투입",
+            "en": "Add all the water"
+          }
+        },
+        {
+          "index": 2,
+          "type": "agitate",
+          "cumulative_g": 300,
+          "start_s": 30,
+          "pour_s": 0,
+          "wait_s": 150,
+          "style": {
+            "ko": "가볍게 저은 뒤 뚜껑 덮고 침지",
+            "en": "Stir gently, cover, and steep"
+          }
+        },
+        {
+          "index": 3,
+          "type": "release",
+          "cumulative_g": 300,
+          "start_s": 180,
+          "pour_s": 0,
+          "wait_s": 0,
+          "style": {
+            "ko": "컵 위에 올려 배출 시작",
+            "en": "Place on the cup to release"
+          }
+        },
+        {
+          "index": 4,
+          "type": "drawdown",
+          "cumulative_g": 300,
+          "target_end_s": 240,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 240, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["full immersion", "no pour technique", "controlled variables"],
-      "goal_tags": ["balance", "body", "repeatability"],
+      "targets": {
+        "total_time_s": 240,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "full immersion",
+        "no pour technique",
+        "controlled variables"
+      ],
+      "goal_tags": [
+        "balance",
+        "body",
+        "repeatability"
+      ],
       "difficulty": 1,
       "requires_extras": [],
-
       "summary": {
         "ko": "물을 한 번에 붓고 정해진 시간만 기다립니다. 푸어라는 변수가 아예 없어 분쇄도·온도·시간만 남습니다. 변수 하나씩 실험하기에 가장 깨끗한 도구입니다.",
         "en": "Add all the water and wait a fixed time. Pouring is removed as a variable entirely, leaving only grind, temperature, and time — the cleanest tool for isolating one variable at a time.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [],
       "verified": false,
       "my_variant_of": null
     },
-
     {
       "id": "aeropress-standard",
-      "title": { "ko": "AeroPress 표준", "en": "AeroPress standard" },
+      "title": {
+        "ko": "AeroPress 표준",
+        "en": "AeroPress standard"
+      },
       "source_type": "standard",
-      "author": { "name": null, "country": null, "competition": null, "year": null, "placement": null },
-
+      "author": {
+        "name": null,
+        "country": null,
+        "competition": null,
+        "year": null,
+        "placement": null
+      },
       "equipment": {
         "brewer_id": "aeropress",
         "compatible_brewers": [],
         "filter": "aeropress-paper",
         "grind_band": -2,
         "grind_original_note": "원본 표기: fine–medium",
-        "extras": ["scale", "stir stick"]
+        "extras": [
+          "scale",
+          "stir stick"
+        ]
       },
-
       "coffee": {
         "dose_g": 15,
         "special_note": {
@@ -485,61 +1197,152 @@
           "en": "A different parameter system from drip. The yield is small, so hot water is often added afterwards (bypass) to dilute."
         },
         "suited_for": {
-          "roast_levels": ["light-medium", "medium", "medium-dark", "full-city"],
-          "processes": ["washed", "natural", "honey"],
-          "flavor_families": ["sweet", "nutty_cocoa", "fruity", "roasted"],
+          "roast_levels": [
+            "light-medium",
+            "medium",
+            "medium-dark",
+            "full-city"
+          ],
+          "processes": [
+            "washed",
+            "natural",
+            "honey"
+          ],
+          "flavor_families": [
+            "sweet",
+            "nutty_cocoa",
+            "fruity",
+            "roasted"
+          ],
           "varieties": []
         }
       },
-
-      "water": { "total_g": 230, "ratio": "1:15.3", "temp_c": 85, "tds_ppm": null,
-        "profile_note": { "ko": "가압 추출이라 낮은 온도에서도 추출력이 확보됩니다", "en": "Pressure brewing extracts well even at lower temperatures" } },
-
+      "water": {
+        "total_g": 230,
+        "ratio": "1:15.3",
+        "temp_c": 85,
+        "tds_ppm": null,
+        "profile_note": {
+          "ko": "가압 추출이라 낮은 온도에서도 추출력이 확보됩니다",
+          "en": "Pressure brewing extracts well even at lower temperatures"
+        }
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":null, "note":{"ko":"필터 린싱 + 챔버 예열","en":"Rinse filter and preheat the chamber"} },
-        { "index":1, "type":"pour",   "cumulative_g":230, "start_s":0,  "pour_s":15, "wait_s":5,
-          "style":{"ko":"전량 투입","en":"Add all the water"} },
-        { "index":2, "type":"agitate","cumulative_g":230, "start_s":20, "pour_s":0,  "wait_s":70,
-          "style":{"ko":"10회 저은 뒤 뚜껑 덮고 침지","en":"Stir 10 times, cap, and steep"} },
-        { "index":3, "type":"press",  "cumulative_g":230, "start_s":90, "pour_s":0,  "wait_s":30,
-          "style":{"ko":"30초에 걸쳐 천천히 압착","en":"Press slowly over 30 seconds"} },
-        { "index":4, "type":"done",   "cumulative_g":230, "target_end_s":120, "remove_at_s":null }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 챔버 예열",
+            "en": "Rinse filter and preheat the chamber"
+          }
+        },
+        {
+          "index": 1,
+          "type": "pour",
+          "cumulative_g": 230,
+          "start_s": 0,
+          "pour_s": 15,
+          "wait_s": 5,
+          "style": {
+            "ko": "전량 투입",
+            "en": "Add all the water"
+          }
+        },
+        {
+          "index": 2,
+          "type": "agitate",
+          "cumulative_g": 230,
+          "start_s": 20,
+          "pour_s": 0,
+          "wait_s": 70,
+          "style": {
+            "ko": "10회 저은 뒤 뚜껑 덮고 침지",
+            "en": "Stir 10 times, cap, and steep"
+          }
+        },
+        {
+          "index": 3,
+          "type": "press",
+          "cumulative_g": 230,
+          "start_s": 90,
+          "pour_s": 0,
+          "wait_s": 30,
+          "style": {
+            "ko": "30초에 걸쳐 천천히 압착",
+            "en": "Press slowly over 30 seconds"
+          }
+        },
+        {
+          "index": 4,
+          "type": "done",
+          "cumulative_g": 230,
+          "target_end_s": 120,
+          "remove_at_s": null
+        }
       ],
-
-      "targets": { "total_time_s": 120, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["pressure", "immersion", "low temperature", "bypass optional"],
-      "goal_tags": ["body", "sweetness", "repeatability"],
+      "targets": {
+        "total_time_s": 120,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "pressure",
+        "immersion",
+        "low temperature",
+        "bypass optional"
+      ],
+      "goal_tags": [
+        "body",
+        "sweetness",
+        "repeatability"
+      ],
       "difficulty": 1,
       "requires_extras": [],
-
       "summary": {
         "ko": "가압 침지 방식이라 낮은 온도로도 충분히 추출됩니다. 총 2분으로 가장 빠르고, 결과 편차가 작습니다.",
         "en": "Pressurised immersion extracts fully even at low temperature. The fastest method here at two minutes total, with little variance between brews.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [],
       "verified": false,
       "verify_note": "에어로프레스는 레시피 편차가 극단적으로 큽니다(정방향/역방향, 온도 75~100°C). 표준형 하나만 넣었습니다.",
       "my_variant_of": null
     },
-
     {
       "id": "wbrc-2025-peng-final",
-      "title": { "ko": "2025 WBrC 결선 — George Peng", "en": "2025 WBrC Final — George Peng" },
+      "title": {
+        "ko": "2025 WBrC 결선 — George Peng",
+        "en": "2025 WBrC Final — George Peng"
+      },
       "source_type": "championship",
-      "author": { "name": "George Jinyang Peng", "country": "China", "competition": "World Brewers Cup", "year": 2025, "placement": 1 },
-
+      "author": {
+        "name": "George Jinyang Peng",
+        "country": "China",
+        "competition": "World Brewers Cup",
+        "year": 2025,
+        "placement": 1
+      },
       "equipment": {
         "brewer_id": "solo-dripper",
-        "compatible_brewers": ["orea-v4", "origami-m-ceramic"],
+        "compatible_brewers": [
+          "orea-v4",
+          "origami-m-ceramic"
+        ],
         "filter": "abaca",
         "grind_band": -1,
         "grind_original_note": "원본 표기: medium",
-        "extras": ["melodrip", "gooseneck kettle", "0.1g scale"]
+        "extras": [
+          "melodrip",
+          "gooseneck kettle",
+          "0.1g scale"
+        ]
       },
-
       "coffee": {
         "dose_g": 15,
         "special_note": {
@@ -547,33 +1350,105 @@
           "en": "Three different roasts, 5 g each. Designed so the cup shifts in layers as it cools — florals, then fruit acidity, then sweetness."
         },
         "suited_for": {
-          "roast_levels": ["light"],
-          "processes": ["washed"],
-          "flavor_families": ["floral", "fruity"],
-          "varieties": ["geisha"]
+          "roast_levels": [
+            "light"
+          ],
+          "processes": [
+            "washed"
+          ],
+          "flavor_families": [
+            "floral",
+            "fruity"
+          ],
+          "varieties": [
+            "geisha"
+          ]
         }
       },
-
-      "water": { "total_g": 240, "ratio": "1:16", "temp_c": 96, "tds_ppm": 40,
-        "profile_note": { "ko": "저미네랄 — 섬세한 아로마를 덮지 않기 위함", "en": "Low mineral, to avoid masking delicate aromatics" } },
-
+      "water": {
+        "total_g": 240,
+        "ratio": "1:16",
+        "temp_c": 96,
+        "tds_ppm": 40,
+        "profile_note": {
+          "ko": "저미네랄 — 섬세한 아로마를 덮지 않기 위함",
+          "en": "Low mineral, to avoid masking delicate aromatics"
+        }
+      },
       "steps": [
-        { "index":0, "type":"preheat", "water_g":80, "temp_c":96, "note":{"ko":"브루어 예열 후 버림","en":"Preheat the brewer, then discard"} },
-        { "index":1, "type":"bloom", "cumulative_g":30,  "start_s":0,  "pour_s":6,  "wait_s":30,
-          "style":{"ko":"반시계 3회전","en":"Three counter-clockwise circles"} },
-        { "index":2, "type":"pour",  "cumulative_g":120, "start_s":36, "pour_s":20, "wait_s":20,
-          "style":{"ko":"스파이럴","en":"Spiral"} },
-        { "index":3, "type":"pour",  "cumulative_g":240, "start_s":76, "pour_s":25, "wait_s":0,
-          "style":{"ko":"중앙 집중","en":"Center focused"} },
-        { "index":4, "type":"drawdown", "cumulative_g":240, "target_end_s":180, "remove_at_s":170 }
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": 80,
+          "temp_c": 96,
+          "note": {
+            "ko": "브루어 예열 후 버림",
+            "en": "Preheat the brewer, then discard"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 30,
+          "start_s": 0,
+          "pour_s": 6,
+          "wait_s": 30,
+          "style": {
+            "ko": "반시계 3회전",
+            "en": "Three counter-clockwise circles"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 120,
+          "start_s": 36,
+          "pour_s": 20,
+          "wait_s": 20,
+          "style": {
+            "ko": "스파이럴",
+            "en": "Spiral"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 240,
+          "start_s": 76,
+          "pour_s": 25,
+          "wait_s": 0,
+          "style": {
+            "ko": "중앙 집중",
+            "en": "Center focused"
+          }
+        },
+        {
+          "index": 4,
+          "type": "drawdown",
+          "cumulative_g": 240,
+          "target_end_s": 180,
+          "remove_at_s": 170
+        }
       ],
-
-      "targets": { "total_time_s": 180, "tds_pct": null, "extraction_yield_pct": null },
-      "technique_tags": ["multi-roast blend", "melodrip", "low-TDS water", "temperature layering"],
-      "goal_tags": ["clarity", "floral"],
+      "targets": {
+        "total_time_s": 180,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "multi-roast blend",
+        "melodrip",
+        "low-TDS water",
+        "temperature layering"
+      ],
+      "goal_tags": [
+        "clarity",
+        "floral"
+      ],
       "difficulty": 5,
-      "requires_extras": ["melodrip"],
-
+      "requires_extras": [
+        "melodrip"
+      ],
       "fallback_guidance": {
         "melodrip": {
           "ko": "Melodrip이 없으면 푸어 높이를 3cm까지 낮추고 유속을 절반으로 줄이세요. 필터 벽면을 타고 흘려보내면 교반이 비슷하게 약해집니다.",
@@ -584,14 +1459,16 @@
           "en": "Filtered tap water is usually low in minerals and approximates the 40 ppm target. No mineral adjustment needed."
         }
       },
-
       "summary": {
         "ko": "저미네랄 물과 약한 교반으로 섬세한 아로마를 보존하는 데 집중한 구성. 특수 장비와 3종 로스트 블렌딩이 전제라 그대로 재현하기는 어렵고, 변환값으로 접근하는 것이 현실적입니다.",
         "en": "Built around preserving delicate aromatics through low-mineral water and gentle agitation. Exact reproduction is impractical given the special equipment and three-roast blend; the converted version is the realistic path.",
         "source_lang": "ko"
       },
-      "curator_commentary": { "ko": null, "en": null, "source_lang": null },
-
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
       "source_urls": [
         "https://www.slowpoursupply.co/blogs/journal/2025-world-brewers-cup-champion-george-pengs-solo-dripper-recipe",
         "https://sprudge.com/how-to-brew-coffee-like-the-2025-world-brewers-cup-champion-338576.html"
@@ -599,17 +1476,1034 @@
       "verified": false,
       "verify_note": "2차 출처 기반입니다. 푸어 구간 세부 시각은 출처마다 표기가 다르므로 대회 공식 자료로 재확인이 필요합니다.",
       "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2024-woelfl-final",
+      "title": {
+        "ko": "2024 WBrC 결선 — Martin Wölfl",
+        "en": "2024 WBrC Final — Martin Wölfl"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Martin Wölfl",
+        "country": "Austria",
+        "competition": "World Brewers Cup",
+        "year": 2024,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "orea-v4",
+        "compatible_brewers": [
+          "origami-m-ceramic",
+          "hario-v60-02-plastic"
+        ],
+        "filter": "sibarist-fast",
+        "grind_band": -1,
+        "grind_original_note": "원본 표기: 630µm",
+        "extras": [
+          "gooseneck kettle",
+          "0.1g scale"
+        ]
+      },
+      "coffee": {
+        "dose_g": 17,
+        "special_note": {
+          "ko": "파나마 Finca Maya 게이샤. Sibarist FAST 필터와 Orea V4를 함께 써서 배출을 극단적으로 빠르게 가져갑니다.",
+          "en": "Panama Finca Maya Geisha. A Sibarist FAST filter with the Orea V4 pushes the drawdown extremely fast."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light"
+          ],
+          "processes": [
+            "washed"
+          ],
+          "flavor_families": [
+            "floral",
+            "fruity",
+            "sweet"
+          ],
+          "varieties": [
+            "geisha"
+          ]
+        }
+      },
+      "water": {
+        "total_g": 270,
+        "ratio": "1:15.9",
+        "temp_c": 93,
+        "tds_ppm": null,
+        "profile_note": null
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 드리퍼 예열",
+            "en": "Rinse the filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 60,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "중앙에서 고르게",
+            "en": "Even, from the center"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 120,
+          "start_s": 30,
+          "pour_s": 10,
+          "wait_s": 0,
+          "style": {
+            "ko": "0:40까지 채움",
+            "en": "Reach this by 0:40"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 170,
+          "start_s": 40,
+          "pour_s": 15,
+          "wait_s": 25,
+          "style": {
+            "ko": "1:20까지 채움",
+            "en": "Reach this by 1:20"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 270,
+          "start_s": 80,
+          "pour_s": 40,
+          "wait_s": 0,
+          "style": {
+            "ko": "2:00까지 남은 물 전량",
+            "en": "All remaining water by 2:00"
+          }
+        },
+        {
+          "index": 5,
+          "type": "drawdown",
+          "cumulative_g": 270,
+          "target_end_s": 150,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 150,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "fast filter",
+        "flat bottom",
+        "4-pour"
+      ],
+      "goal_tags": [
+        "clarity",
+        "floral"
+      ],
+      "difficulty": 4,
+      "requires_extras": [],
+      "fallback_guidance": {
+        "sibarist-fast": {
+          "ko": "Sibarist FAST가 없으면 일반 필터로는 배출이 느려집니다. 분쇄를 1밴드 굵게 가고 마지막 푸어를 조금 천천히 부으세요.",
+          "en": "Without a Sibarist FAST the drawdown slows. Go one band coarser and pour the final stage a little more slowly."
+        }
+      },
+      "summary": {
+        "ko": "네 번의 푸어로 2분 안에 물을 다 붓고, 초고속 필터와 드리퍼로 짧은 접촉 시간을 만드는 구성입니다. 푸어 구조 자체는 단순합니다.",
+        "en": "Four pours finish all the water within two minutes, and an ultra-fast filter and brewer keep contact time short. The pour structure itself is simple."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://europeancoffeetrip.com/winning-pour-over-recipe-martin-woelfl/",
+        "https://sprudge.com/martin-wolfl-wins-the-2024-world-brewers-cup-championship-239423.html"
+      ],
+      "verified": false,
+      "verify_note": "물량·시각은 출처와 일치합니다. 드로우다운 종료 시각은 출처에 명시되지 않아 마지막 푸어(2:00) 이후로 추정했습니다.",
+      "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2023-medina-final",
+      "title": {
+        "ko": "2023 WBrC 결선 — Carlos Medina",
+        "en": "2023 WBrC Final — Carlos Medina"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Carlos Medina",
+        "country": "Chile",
+        "competition": "World Brewers Cup",
+        "year": 2023,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "origami-m-ceramic",
+        "compatible_brewers": [
+          "hario-v60-02-plastic",
+          "hario-v60-02-ceramic",
+          "timemore-crystal-eye"
+        ],
+        "filter": "brewista-x-cone",
+        "grind_band": 0,
+        "grind_original_note": null,
+        "extras": [
+          "gooseneck kettle",
+          "scale",
+          "timer"
+        ]
+      },
+      "coffee": {
+        "dose_g": 16,
+        "special_note": {
+          "ko": "Café Granja La Esperanza 내추럴 시드라. 본인이 '아주 쉽고 일관된 방식'이라고 밝힌 구성입니다.",
+          "en": "Natural Sidra from Café Granja La Esperanza. He described the method himself as very easy and consistent."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light",
+            "light-medium"
+          ],
+          "processes": [
+            "natural",
+            "washed"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sweet"
+          ],
+          "varieties": [
+            "sidra"
+          ]
+        }
+      },
+      "water": {
+        "total_g": 250,
+        "ratio": "1:15.6",
+        "temp_c": 91,
+        "tds_ppm": null,
+        "profile_note": null
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "필터 린싱 + 예열",
+            "en": "Rinse the filter and preheat"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "1투 — 이후 모든 푸어가 같은 50g",
+            "en": "Pour 1 — every pour is the same 50 g"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 100,
+          "start_s": 30,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "2투",
+            "en": "Pour 2"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 150,
+          "start_s": 60,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "3투",
+            "en": "Pour 3"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 200,
+          "start_s": 90,
+          "pour_s": 8,
+          "wait_s": 22,
+          "style": {
+            "ko": "4투",
+            "en": "Pour 4"
+          }
+        },
+        {
+          "index": 5,
+          "type": "pour",
+          "cumulative_g": 250,
+          "start_s": 120,
+          "pour_s": 8,
+          "wait_s": 0,
+          "style": {
+            "ko": "5투",
+            "en": "Pour 5"
+          }
+        },
+        {
+          "index": 6,
+          "type": "drawdown",
+          "cumulative_g": 250,
+          "target_end_s": 180,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 180,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "equal pours",
+        "fixed rhythm",
+        "5-pour"
+      ],
+      "goal_tags": [
+        "clarity",
+        "sweetness",
+        "repeatability"
+      ],
+      "difficulty": 3,
+      "requires_extras": [],
+      "summary": {
+        "ko": "50g씩 다섯 번, 30초 간격으로만 붓습니다. 리듬이 일정해서 손이 흔들려도 결과가 크게 변하지 않습니다. 챔피언 레시피 중 재현이 가장 쉬운 축입니다.",
+        "en": "Five pours of 50 g, one every 30 seconds. The fixed rhythm means an unsteady hand changes little. Among the easiest championship recipes to reproduce."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://www.slowpoursupply.co/blogs/brew-recipes/recipe-recap-carlos-medina-s-representing-chile-world-brewers-cup-champion-recipe",
+        "https://origami-kai.com/en/blogs/special-feature/world-brewers-cup2023-carlos-medina"
+      ],
+      "verified": false,
+      "verify_note": "출처마다 도징 표기가 다릅니다(16g 또는 1:16.1 기준 15.5g). 여기서는 16g/250g으로 정리했습니다. 필터도 원뿔형과 플랫형 표기가 엇갈려 원뿔로 두었습니다.",
+      "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2022-hsu-final",
+      "title": {
+        "ko": "2022 WBrC 결선 — Shih Yuan Hsu",
+        "en": "2022 WBrC Final — Shih Yuan Hsu"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Shih Yuan Hsu (Sherry)",
+        "country": "Taiwan",
+        "competition": "World Brewers Cup",
+        "year": 2022,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "orea-v4",
+        "compatible_brewers": [
+          "kalita-wave-185-steel",
+          "fellow-stagg-x"
+        ],
+        "filter": "kalita-wave-185",
+        "grind_band": 1,
+        "grind_original_note": "원본 표기: 1000µm 75% + 800µm 25% 혼합",
+        "extras": [
+          "1Zpresso K-Pro",
+          "두 개의 주전자",
+          "0.1g scale"
+        ]
+      },
+      "coffee": {
+        "dose_g": 14,
+        "special_note": {
+          "ko": "Finca Micava 무산소 발효 내추럴 게이샤. 굵기가 다른 두 분쇄를 섞어(1000µm 75% + 800µm 25%) 추출 속도가 서로 다른 입자를 일부러 공존시킵니다.",
+          "en": "Finca Micava carbonic maceration natural Geisha. Two grind sizes are mixed (75% at 1000 µm, 25% at 800 µm) so particles extracting at different rates coexist on purpose."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light"
+          ],
+          "processes": [
+            "anaerobic",
+            "natural"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sour_fermented"
+          ],
+          "varieties": [
+            "geisha"
+          ]
+        }
+      },
+      "water": {
+        "total_g": 200,
+        "ratio": "1:14.3",
+        "temp_c": 95,
+        "tds_ppm": null,
+        "profile_note": {
+          "ko": "1투만 70°C, 나머지 세 번은 95°C",
+          "en": "70 °C for the first pour only, 95 °C for the other three"
+        }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "주전자 두 개를 70°C와 95°C로 준비",
+            "en": "Prepare two kettles, one at 70 °C and one at 95 °C"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 10,
+          "wait_s": 30,
+          "temp_c": 70,
+          "style": {
+            "ko": "70°C — 낮은 온도로 시작해 초반 추출을 억제",
+            "en": "70 °C — a low start suppresses early extraction"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 100,
+          "start_s": 40,
+          "pour_s": 10,
+          "wait_s": 30,
+          "temp_c": 95,
+          "style": {
+            "ko": "95°C로 전환",
+            "en": "Switch to 95 °C"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 150,
+          "start_s": 80,
+          "pour_s": 10,
+          "wait_s": 30,
+          "temp_c": 95,
+          "style": {
+            "ko": "95°C",
+            "en": "95 °C"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 200,
+          "start_s": 120,
+          "pour_s": 10,
+          "wait_s": 0,
+          "temp_c": 95,
+          "style": {
+            "ko": "95°C",
+            "en": "95 °C"
+          }
+        },
+        {
+          "index": 5,
+          "type": "drawdown",
+          "cumulative_g": 200,
+          "target_end_s": 170,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 170,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "dual grind size",
+        "multi-temperature",
+        "two kettles",
+        "4-pour"
+      ],
+      "goal_tags": [
+        "clarity",
+        "acidity",
+        "floral"
+      ],
+      "difficulty": 5,
+      "requires_extras": [
+        "dual-grind"
+      ],
+      "fallback_guidance": {
+        "dual-grind": {
+          "ko": "분쇄를 두 번 나눠 갈기 어렵다면 중간값 하나로 진행하세요. 대신 1투 70°C는 그대로 지키는 편이 이 레시피의 성격에 가깝습니다.",
+          "en": "If splitting the grind is impractical, use a single mid setting. Keeping the 70 °C first pour matters more to this recipe's character."
+        }
+      },
+      "summary": {
+        "ko": "굵기가 다른 두 분쇄를 섞고, 1투만 70°C로 낮췄다가 95°C로 올립니다. 추출 속도가 다른 입자와 온도 변화를 겹쳐 층을 만드는 구성입니다.",
+        "en": "Two grind sizes are blended, and the first pour drops to 70 °C before rising to 95 °C. Particles that extract at different rates are layered with a temperature shift."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://melbourne.wcc.coffee/news/congratulations-to-the-2022-world-brewers-cup-champion",
+        "https://www.comunicaffe.com/shih-yuan-hsu-world-brewers-cup-2022-interview/"
+      ],
+      "verified": false,
+      "verify_note": "도징·물량·온도·분쇄 혼합비는 출처와 일치합니다. 원본 드리퍼는 Orea V3이며 카탈로그에 V4만 있어 대체했습니다. 푸어 간격은 출처에 없어 40초 균등으로 추정했습니다.",
+      "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2021-winton-final",
+      "title": {
+        "ko": "2021 WBrC 결선 — Matt Winton",
+        "en": "2021 WBrC Final — Matt Winton"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Matt Winton",
+        "country": "Switzerland",
+        "competition": "World Brewers Cup",
+        "year": 2021,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "hario-v60-02-plastic",
+        "compatible_brewers": [
+          "hario-v60-02-ceramic",
+          "origami-m-ceramic",
+          "timemore-crystal-eye"
+        ],
+        "filter": "hario-v60-bleached",
+        "grind_band": 0,
+        "grind_original_note": "Kinu M47 사용",
+        "extras": [
+          "두 개의 주전자",
+          "gooseneck kettle",
+          "scale"
+        ]
+      },
+      "coffee": {
+        "dose_g": 20,
+        "special_note": {
+          "ko": "주전자를 두 개 씁니다. 블룸은 93°C로 뜨겁게, 뒤로 갈수록 88°C로 낮춰 후반 추출을 억제합니다.",
+          "en": "Two kettles: a hot 93 °C bloom, then 88 °C later on to hold back extraction in the final stages."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light",
+            "light-medium"
+          ],
+          "processes": [
+            "washed",
+            "natural"
+          ],
+          "flavor_families": [
+            "fruity",
+            "floral",
+            "sweet"
+          ],
+          "varieties": []
+        }
+      },
+      "water": {
+        "total_g": 300,
+        "ratio": "1:15",
+        "temp_c": 93,
+        "tds_ppm": null,
+        "profile_note": {
+          "ko": "블룸 93°C, 후반 88°C",
+          "en": "93 °C for the bloom, 88 °C later"
+        }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "주전자 두 개를 93°C와 88°C로 준비",
+            "en": "Prepare two kettles at 93 °C and 88 °C"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 10,
+          "wait_s": 35,
+          "temp_c": 93,
+          "style": {
+            "ko": "93°C — 뜨겁게 시작",
+            "en": "93 °C — start hot"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 120,
+          "start_s": 45,
+          "pour_s": 12,
+          "wait_s": 33,
+          "temp_c": 93,
+          "style": {
+            "ko": "70g",
+            "en": "70 g"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 180,
+          "start_s": 90,
+          "pour_s": 10,
+          "wait_s": 35,
+          "temp_c": 88,
+          "style": {
+            "ko": "88°C로 전환 — 이후 60g씩",
+            "en": "Switch to 88 °C — 60 g from here"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 240,
+          "start_s": 135,
+          "pour_s": 10,
+          "wait_s": 35,
+          "temp_c": 88,
+          "style": {
+            "ko": "60g",
+            "en": "60 g"
+          }
+        },
+        {
+          "index": 5,
+          "type": "pour",
+          "cumulative_g": 300,
+          "start_s": 180,
+          "pour_s": 10,
+          "wait_s": 0,
+          "temp_c": 88,
+          "style": {
+            "ko": "60g",
+            "en": "60 g"
+          }
+        },
+        {
+          "index": 6,
+          "type": "drawdown",
+          "cumulative_g": 300,
+          "target_end_s": 225,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 225,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "multi-temperature",
+        "two kettles",
+        "5-pour",
+        "no stir"
+      ],
+      "goal_tags": [
+        "clarity",
+        "sweetness",
+        "balance"
+      ],
+      "difficulty": 4,
+      "requires_extras": [
+        "second-kettle"
+      ],
+      "fallback_guidance": {
+        "second-kettle": {
+          "ko": "주전자가 하나면 93°C로 시작해 자연히 식게 두세요. 3투 무렵이면 대략 88~89°C가 됩니다. 뚜껑을 열어두면 더 빨리 떨어집니다.",
+          "en": "With one kettle, start at 93 °C and let it cool naturally — it lands near 88–89 °C by the third pour. Leaving the lid off speeds this up."
+        }
+      },
+      "summary": {
+        "ko": "다섯 번 푸어를 45초 간격으로 붓되, 중간에 물 온도를 93°C에서 88°C로 낮춥니다. 후반 추출을 억제해 잡미를 막는 구조입니다.",
+        "en": "Five pours at 45-second intervals, with the water dropping from 93 °C to 88 °C midway. Holding back late extraction keeps off-flavors out."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://honestcoffeeguide.com/brew-recipes/matt-winton-v60-five-pour/",
+        "https://www.roestcoffee.com/blog/matts-winning-coffee"
+      ],
+      "verified": false,
+      "verify_note": "푸어 분할(50/70/60/60/60)과 두 온도는 출처와 일치합니다. 대회에서는 금속 V60을 썼고 여기서는 플라스틱을 기본으로 두었습니다. 간격 45초는 통상 표기를 따랐습니다.",
+      "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2019-du-final",
+      "title": {
+        "ko": "2019 WBrC 결선 — Du Jianing",
+        "en": "2019 WBrC Final — Du Jianing"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Du Jianing",
+        "country": "China",
+        "competition": "World Brewers Cup",
+        "year": 2019,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "origami-m-ceramic",
+        "compatible_brewers": [
+          "hario-v60-02-plastic",
+          "timemore-crystal-eye"
+        ],
+        "filter": "hario-v60-02-bleached",
+        "grind_band": -1,
+        "grind_original_note": "굵게 한 번 갈아 채프를 제거한 뒤 다시 곱게 분쇄",
+        "extras": [
+          "gooseneck kettle",
+          "scale"
+        ]
+      },
+      "coffee": {
+        "dose_g": 16,
+        "special_note": {
+          "ko": "게이샤를 Ikawa 샘플 로스터로 4분만 볶았습니다. 굵게 한 번 갈아 채프를 걸러낸 뒤 다시 곱게 가는 이중 분쇄로 클래리티를 올립니다.",
+          "en": "A Geisha roasted for just four minutes on an Ikawa sample roaster. Grinding coarse first to remove chaff, then regrinding finer, lifts clarity."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light"
+          ],
+          "processes": [
+            "washed"
+          ],
+          "flavor_families": [
+            "floral",
+            "fruity"
+          ],
+          "varieties": [
+            "geisha"
+          ]
+        }
+      },
+      "water": {
+        "total_g": 240,
+        "ratio": "1:15",
+        "temp_c": 94,
+        "tds_ppm": null,
+        "profile_note": null
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "굵게 갈아 채프 제거 → 다시 곱게 분쇄 → 필터 린싱",
+            "en": "Grind coarse, remove chaff, regrind finer, rinse the filter"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 8,
+          "wait_s": 17,
+          "style": {
+            "ko": "짧은 블룸 — 총 추출이 1:40으로 매우 짧습니다",
+            "en": "A short bloom — the whole brew is only 1:40"
+          }
+        },
+        {
+          "index": 2,
+          "type": "pour",
+          "cumulative_g": 150,
+          "start_s": 25,
+          "pour_s": 20,
+          "wait_s": 5,
+          "style": {
+            "ko": "연속으로 빠르게",
+            "en": "Continuous and quick"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 240,
+          "start_s": 50,
+          "pour_s": 20,
+          "wait_s": 0,
+          "style": {
+            "ko": "남은 물 전량",
+            "en": "All remaining water"
+          }
+        },
+        {
+          "index": 4,
+          "type": "drawdown",
+          "cumulative_g": 240,
+          "target_end_s": 100,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 100,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "double grind",
+        "chaff removal",
+        "very short brew"
+      ],
+      "goal_tags": [
+        "clarity",
+        "floral"
+      ],
+      "difficulty": 5,
+      "requires_extras": [
+        "double-grind"
+      ],
+      "fallback_guidance": {
+        "double-grind": {
+          "ko": "이중 분쇄가 번거로우면 한 번만 갈고 체로 미분을 털어내세요. 채프 제거만으로도 클래리티가 눈에 띄게 올라갑니다.",
+          "en": "If double grinding is too fiddly, grind once and sift out the fines. Removing chaff alone lifts clarity noticeably."
+        }
+      },
+      "summary": {
+        "ko": "총 추출이 1분 40초로 이 목록에서 가장 짧습니다. 매우 약하게 볶은 게이샤를 짧게 뽑아 꽃향만 남기는 방향입니다.",
+        "en": "At 1:40 this is the shortest brew in the list. A very lightly roasted Geisha is pulled quickly so only the florals remain."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://sprudge.com/du-jianing-of-china-is-the-2019-world-brewers-cup-champion-142739.html",
+        "https://www.baristamagazine.com/du-jianing-discusses-her-path-to-world-brewers-cup-victory/"
+      ],
+      "verified": false,
+      "verify_note": "도징 16g, 물 240g, 94°C, 총 1:40, 이중 분쇄는 출처와 일치합니다. 푸어 분할은 출처에 없어 총 시간에 맞춰 3단계로 추정했습니다.",
+      "my_variant_of": null
+    },
+    {
+      "id": "wbrc-2018-fukahori-final",
+      "title": {
+        "ko": "2018 WBrC 결선 — Emi Fukahori",
+        "en": "2018 WBrC Final — Emi Fukahori"
+      },
+      "source_type": "championship",
+      "author": {
+        "name": "Emi Fukahori",
+        "country": "Switzerland",
+        "competition": "World Brewers Cup",
+        "year": 2018,
+        "placement": 1
+      },
+      "equipment": {
+        "brewer_id": "hario-switch-03",
+        "compatible_brewers": [
+          "clever-dripper"
+        ],
+        "filter": "hario-v60-03-bleached",
+        "grind_band": 2,
+        "grind_original_note": "원본 표기: coarse",
+        "extras": [
+          "두 개의 주전자",
+          "scale"
+        ]
+      },
+      "coffee": {
+        "dose_g": 17,
+        "special_note": {
+          "ko": "브라질 Daterra 농장의 Laurina(저카페인 품종). 취리히 수돗물 110ppm을 그대로 썼습니다.",
+          "en": "Laurina — a naturally low-caffeine variety — from Daterra in Brazil, brewed with Zurich tap water at 110 ppm."
+        },
+        "suited_for": {
+          "roast_levels": [
+            "light-medium",
+            "medium"
+          ],
+          "processes": [
+            "natural",
+            "washed"
+          ],
+          "flavor_families": [
+            "sweet",
+            "fruity",
+            "nutty_cocoa"
+          ],
+          "varieties": [
+            "laurina"
+          ]
+        }
+      },
+      "water": {
+        "total_g": 220,
+        "ratio": "1:12.9",
+        "temp_c": 80,
+        "tds_ppm": 110,
+        "profile_note": {
+          "ko": "80 → 95 → 80°C. 온도를 올렸다 다시 내립니다",
+          "en": "80 → 95 → 80 °C — up, then back down"
+        }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "type": "preheat",
+          "water_g": null,
+          "note": {
+            "ko": "주전자를 80°C와 95°C로 준비 · 밸브 닫기",
+            "en": "Prepare kettles at 80 °C and 95 °C, close the valve"
+          }
+        },
+        {
+          "index": 1,
+          "type": "bloom",
+          "cumulative_g": 50,
+          "start_s": 0,
+          "pour_s": 10,
+          "wait_s": 35,
+          "temp_c": 80,
+          "style": {
+            "ko": "80°C · 밸브 닫고 침지 — 단맛과 과일향을 부드럽게 뽑습니다",
+            "en": "80 °C, valve closed — gently draws out sweetness and fruit"
+          }
+        },
+        {
+          "index": 2,
+          "type": "valve",
+          "cumulative_g": 50,
+          "start_s": 45,
+          "pour_s": 0,
+          "wait_s": 0,
+          "style": {
+            "ko": "밸브 열기 — 여기서부터 투과",
+            "en": "Open the valve — percolation from here"
+          }
+        },
+        {
+          "index": 3,
+          "type": "pour",
+          "cumulative_g": 150,
+          "start_s": 45,
+          "pour_s": 25,
+          "wait_s": 35,
+          "temp_c": 95,
+          "style": {
+            "ko": "95°C로 올려 향을 엽니다",
+            "en": "Raise to 95 °C to open the aromatics"
+          }
+        },
+        {
+          "index": 4,
+          "type": "pour",
+          "cumulative_g": 220,
+          "start_s": 105,
+          "pour_s": 25,
+          "wait_s": 0,
+          "temp_c": 80,
+          "style": {
+            "ko": "다시 80°C — 후미를 깔끔하게",
+            "en": "Back to 80 °C for a clean finish"
+          }
+        },
+        {
+          "index": 5,
+          "type": "drawdown",
+          "cumulative_g": 220,
+          "target_end_s": 175,
+          "remove_at_s": null
+        }
+      ],
+      "targets": {
+        "total_time_s": 175,
+        "tds_pct": null,
+        "extraction_yield_pct": null
+      },
+      "technique_tags": [
+        "immersion",
+        "percolation",
+        "multi-temperature",
+        "two kettles"
+      ],
+      "goal_tags": [
+        "sweetness",
+        "balance",
+        "body"
+      ],
+      "difficulty": 4,
+      "requires_extras": [
+        "second-kettle"
+      ],
+      "fallback_guidance": {
+        "second-kettle": {
+          "ko": "주전자가 하나면 95°C로 끓여두고, 1투는 찬물을 조금 섞어 80°C로 맞추세요. 3투도 같은 방법으로 낮춥니다.",
+          "en": "With one kettle, keep it at 95 °C and cut the first pour with a little cold water to reach 80 °C. Do the same for the third pour."
+        }
+      },
+      "summary": {
+        "ko": "침지로 시작해 투과로 넘어가고, 물 온도를 80 → 95 → 80°C로 올렸다 내립니다. 온도를 향미 단계별 도구로 쓰는 대표적인 구성입니다.",
+        "en": "Starts as immersion, switches to percolation, and moves the water 80 → 95 → 80 °C. A clear example of using temperature as a stage-by-stage flavor tool."
+      },
+      "curator_commentary": {
+        "ko": null,
+        "en": null,
+        "source_lang": null
+      },
+      "source_urls": [
+        "https://europeancoffeetrip.com/emi-fukahori-world-brewers-cup-champion/",
+        "https://goat-story.com/blogs/news/emi-fukahoris-winning-recipe"
+      ],
+      "verified": false,
+      "verify_note": "물량 50/100/70g, 온도 80/95/80°C, 총 2:55, 취리히 물 110ppm은 출처와 일치합니다. 대회에서는 Kalita Wave를 썼다는 표기도 있으나, 침지+투과 구조에 맞춰 Hario Switch로 두었습니다.",
+      "my_variant_of": null
     }
-  ],
-
-  "_todo": {
-    "phase_2_추가": [
-      "2024 Martin Wölfl (Austria)",
-      "2023 Carlos Medina (Chile)",
-      "2022 Shih Yuan Hsu",
-      "2021 Matt Winton (Switzerland)",
-      "국내 KBrC 챔피언 1~2명"
-    ],
-    "작성_시_주의": "연도별 챔피언과 파라미터는 대회 공식 자료·Sprudge·Barista Magazine 등 1차에 가까운 출처로 교차 확인하세요. 블로그 재정리본은 단위 오기와 연도 혼동이 흔합니다."
-  }
+  ]
 }

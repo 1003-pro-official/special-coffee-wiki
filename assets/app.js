@@ -180,7 +180,8 @@ const Data = {
    ──────────────────────────────────────────── */
 const App = {
   settings: null,
-  page: 'home',   // home | recommend | results | brew-prep | brew | brew-done | logs | log-detail
+  page: 'home',   // home | recommend | results | brew-prep | brew | brew-done
+                  // | logs | log-detail | archive | archive-detail
   onboardStep: 1,
   showAllBrewers: false,
   showAllGrinders: false,
@@ -188,6 +189,9 @@ const App = {
 
   // Phase 1c — 추출 세션
   brew: { result: null, plan: null, session: null, sound: true, wake: false, wakeFailed: false },
+
+  // Phase 2 — 아카이브
+  archive: { type: 'all', geometry: null, roast: null, difficulty: null, openId: null },
 
   // Phase 1d — 테이스팅 입력 / 로그
   tasting: { overall: null, flavor_nodes: [], next_action: '' },
@@ -233,6 +237,8 @@ const App = {
     else if (this.page === 'brew-prep')  root.innerHTML = this.viewBrewPrep();
     else if (this.page === 'brew')       root.innerHTML = this.viewBrew();
     else if (this.page === 'brew-done')  root.innerHTML = this.viewBrewDone();
+    else if (this.page === 'archive')    root.innerHTML = this.viewArchive();
+    else if (this.page === 'archive-detail') root.innerHTML = this.viewArchiveDetail();
     else if (this.page === 'logs')       root.innerHTML = this.viewLogs();
     else if (this.page === 'log-detail') root.innerHTML = this.viewLogDetail();
     else                                 root.innerHTML = this.viewHome();
@@ -508,7 +514,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
   tabbar(active = 'brew') {
     const items = [
       ['☕', 'tab.brew',    'brew',    'go-home'],
-      ['🔍', 'tab.explore', 'explore', null],      // Phase 3
+      ['🔍', 'tab.explore', 'explore', 'go-archive'],
       ['📓', 'tab.log',     'logs',    'go-logs'],
       ['📖', 'tab.wiki',    'wiki',    null]       // Phase 4
     ];
@@ -728,7 +734,8 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
   /** 추천 결과에서 추출 세션을 엽니다.
       변환된 steps(r.steps)를 씁니다 — 원본이 아니라 내 장비에 맞춰 보정된 타임라인입니다. */
   openBrew(recipeId) {
-    const r = this.results?.find(x => x.recipe.id === recipeId);
+    const r = this.results?.find(x => x.recipe.id === recipeId)
+           || (Data.byId.recipe[recipeId] ? this.makeResult(Data.byId.recipe[recipeId]) : null);
     if (!r) return;
     this.brew.result = r;
     this.brew.plan = BrewPlan.build(r.steps);
@@ -776,13 +783,21 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       </div>`;
     }).join('');
 
+    // 단계마다 온도가 달라지는 레시피가 있습니다(2018 Fukahori 80→95→80 등).
+    // 직전과 달라질 때만 배지를 붙입니다 — 매 줄에 붙이면 소음이 됩니다.
+    let prevTemp = r.final.temp_c;
     const steps = f.timeline.map(s => {
       const style = this.stepText(s.style);
       const g = BrewPlan.targetAt(f, s.index);
+      const raw = r.steps.find(x => x.index === s.index);
+      const temp = raw?.temp_c ?? null;
+      const showTemp = temp != null && temp !== prevTemp;
+      if (temp != null) prevTemp = temp;
       return `<div class="tl__item">
         <div class="tl__row">
           <span class="tl__time">${esc(BrewPlan.mmss(s.startS))}</span>
-          <span class="tl__name">${esc(this.stepName(s))}</span>
+          <span class="tl__name">${esc(this.stepName(s))}${
+            showTemp ? `<span class="temp-badge">${temp} °C</span>` : ''}</span>
           ${g != null ? `<span class="tl__g">${g} g</span>` : ''}
         </div>
         ${style ? `<div class="tl__sub" style="padding-left:52px">${esc(style)}</div>` : ''}
@@ -907,6 +922,9 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
     let how = this.stepText(s.step?.style) || '';
     if (s.step?.removeAtS != null) how = t('brew.removeAt', { time: BrewPlan.mmss(s.step.removeAtS) });
+    // 단계별 온도가 지정된 레시피는 현재 단계의 물 온도를 함께 보여줍니다
+    const raw = b.result?.steps?.find(x => x.index === s.step?.index);
+    if (raw?.temp_c != null) how = `${raw.temp_c} °C · ${how}`;
     set('bHow', how);
 
     set('bNext', s.next ? t('brew.nextIn', { s: s.toNext }) : t('brew.doneIn', { s: s.toNext }));
@@ -1039,6 +1057,236 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         <button class="btn" data-act="tas-save" ${this.tasting.overall ? '' : 'disabled'}>
           ${esc(this.tasting.overall ? t('tas.save') : t('tas.needOverall'))}
         </button>
+      </div>
+    </div>`;
+  },
+
+  /* ══════════ 레시피 아카이브 (Phase 2) ══════════ */
+
+  /** 아카이브에서 바로 추출하려면 추천 결과와 같은 모양의 객체가 필요합니다.
+      Score/Convert를 그 자리에서 돌려 만듭니다. */
+  makeResult(recipe) {
+    const c = this.ctx();
+    const s = Score.evaluate(recipe, c);
+    const conv = Convert.run(recipe, c);
+    return { recipe, ...s, ...conv, fit: Score.fit(s), why: Engine.reasons({ ...s }, c) };
+  },
+
+  archiveList() {
+    const f = this.archive;
+    return Data.recipes.filter(r => {
+      if (f.type !== 'all' && r.source_type !== f.type) return false;
+      if (f.geometry) {
+        const b = Data.byId.brewer[r.equipment.brewer_id];
+        if (!b || b.geometry !== f.geometry) return false;
+      }
+      if (f.roast && !(r.coffee.suited_for.roast_levels || []).includes(f.roast)) return false;
+      if (f.difficulty && r.difficulty !== f.difficulty) return false;
+      return true;
+    }).sort((a, b) => {
+      // 챔피언은 최신 연도 순, 표준은 난이도 순
+      const ay = a.author?.year ?? 0, by = b.author?.year ?? 0;
+      if (ay !== by) return by - ay;
+      return a.difficulty - b.difficulty;
+    });
+  },
+
+  viewArchive() {
+    const f = this.archive;
+    const list = this.archiveList();
+    const active = f.type !== 'all' || f.geometry || f.roast || f.difficulty;
+
+    const chip = (act, val, label, cur) =>
+      `<button class="chip" data-act="${act}" data-v="${esc(val)}" aria-pressed="${cur === val}">${esc(label)}</button>`;
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <span class="topbar__title">${esc(t('ar.title'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s4)"></div>
+        <p class="dim">${esc(t('ar.sub'))}</p>
+
+        <div style="height:var(--s4)"></div>
+        <div class="filters">
+          ${chip('ar-type', 'all', t('ar.all'), f.type)}
+          ${chip('ar-type', 'championship', t('ar.champ'), f.type)}
+          ${chip('ar-type', 'standard', t('ar.std'), f.type)}
+        </div>
+        <div style="height:var(--s2)"></div>
+        <div class="filters">
+          ${['cone', 'flat', 'immersion', 'hybrid_immersion', 'pressure_immersion']
+            .map(g => chip('ar-geo', g, term('geometry', g), f.geometry)).join('')}
+        </div>
+        <div style="height:var(--s2)"></div>
+        <div class="filters">
+          ${['light', 'medium', 'full-city'].map(r => chip('ar-roast', r, term('roast_level', r), f.roast)).join('')}
+          ${[1, 2, 3, 4, 5].map(d => chip('ar-diff', String(d), t('rec.difficulty', { n: d }), String(f.difficulty || ''))).join('')}
+        </div>
+
+        <div style="height:var(--s5)"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3)">
+          <span class="caption">${esc(t('ar.count', { n: list.length }))}</span>
+          ${active ? `<button class="topbar__action" data-act="ar-clear">${esc(t('ar.clear'))}</button>` : ''}
+        </div>
+        <div style="height:var(--s2)"></div>
+
+        ${list.length ? list.map(r => this.archiveCard(r)).join('')
+                      : `<p class="dim">${esc(t('ar.none'))}</p>`}
+        <div style="height:var(--s8)"></div>
+      </div>
+      ${this.tabbar('explore')}
+    </div>`;
+  },
+
+  archiveCard(r) {
+    const b = Data.byId.brewer[r.equipment.brewer_id];
+    const a = r.author || {};
+    const meta = [
+      Data.brewerName(b),
+      `${r.coffee.dose_g} g / ${r.water.total_g} g`,
+      `${r.water.temp_c} °C`,
+      BrewPlan.mmss(r.targets.total_time_s)
+    ].join(' · ');
+
+    return `<button class="ar" data-act="ar-open" data-id="${esc(r.id)}">
+      <span class="ar__head">
+        <span style="min-width:0">
+          <span class="ar__name">${esc(Data.recipeTitle(r))}</span>
+          <span class="ar__meta">${esc(meta)}</span>
+          <span class="ar__tags">
+            <span class="tag">${esc(term('source_type', r.source_type))}</span>
+            <span class="tag">${esc(t('rec.difficulty', { n: r.difficulty }))}</span>
+            ${a.country ? `<span class="tag">${esc(a.country)}</span>` : ''}
+            ${r.verified ? '' : `<span class="tag">${esc(t('ar.unverified'))}</span>`}
+          </span>
+        </span>
+        ${a.year ? `<span class="ar__year">${a.year}</span>` : ''}
+      </span>
+    </button>`;
+  },
+
+  viewArchiveDetail() {
+    const r = Data.byId.recipe[this.archive.openId];
+    if (!r) return this.viewArchive();
+
+    const b = Data.byId.brewer[r.equipment.brewer_id];
+    const a = r.author || {};
+    const plan = BrewPlan.build(r.steps);
+    const maxG = r.water.total_g || 1;
+
+    // 온도 배지는 직전 단계와 달라질 때만 붙입니다. 매 줄에 붙이면 정보가 아니라 소음입니다.
+    let prevTemp = r.water.temp_c;
+    const rows = plan.timeline.map((s, i) => {
+      const g = BrewPlan.targetAt(plan, s.index);
+      const raw = r.steps.find(x => x.index === s.index || x.start_s === s.startS);
+      const temp = raw?.temp_c ?? null;
+      const showTemp = temp != null && temp !== prevTemp;
+      if (temp != null) prevTemp = temp;
+      const desc = this.stepText(s.style);
+
+      return `<div class="vt__row ${s.type === 'pour' || s.type === 'bloom' ? 'vt__row--pour' : ''}">
+        <span class="vt__time">${esc(BrewPlan.mmss(s.startS))}</span>
+        <span class="vt__rail"><i class="vt__dot"></i></span>
+        <span class="vt__body">
+          <span class="vt__title">
+            <span class="vt__name">${esc(this.stepName(s))}${
+              showTemp ? `<span class="temp-badge">${temp} °C</span>` : ''}</span>
+            ${g != null ? `<span class="vt__g">${g} g</span>` : ''}
+          </span>
+          ${desc ? `<span class="vt__desc">${esc(desc)}</span>` : ''}
+          ${g != null ? `<span class="vt__bar"><i style="width:${Math.round(g / maxG * 100)}%"></i></span>` : ''}
+        </span>
+      </div>`;
+    }).join('');
+
+    const params = [
+      [t('param.ratio'), `${r.water.ratio}`],
+      [t('param.temp'), `${r.water.temp_c} °C`],
+      [t('param.dose'), `${r.coffee.dose_g} g`],
+      [t('param.time'), BrewPlan.mmss(r.targets.total_time_s)]
+    ];
+
+    const special = I18n.prose(r.coffee.special_note);
+    const summary = I18n.prose(r.summary);
+    const commentary = I18n.prose(r.curator_commentary);
+
+    const proseBlock = (p) => p ? `<div class="${p.isFallback ? 'fallback' : ''}">
+      ${p.isFallback ? `<div class="fallback__badge">ⓘ ${esc(t('fallback.koreanOnly'))}</div>` : ''}
+      <p class="${p.isFallback ? 'fallback__body' : 'bod'}">${esc(p.text)}</p></div>` : '';
+
+    return `<div class="screen is-active">
+      <header class="topbar">
+        <button class="topbar__action" data-act="go-archive">← ${esc(t('common.back'))}</button>
+        <span class="topbar__title">${esc(t('ar.detail'))}</span>${this.langSeg()}
+      </header>
+      <div class="scroll pad">
+        <div style="height:var(--s5)"></div>
+        <h1 class="title">${esc(Data.recipeTitle(r))}</h1>
+        <div style="height:var(--s2)"></div>
+        <p class="dim">${esc([
+          a.name, a.country,
+          a.competition && a.year ? `${a.competition} ${a.year}` : null,
+          Data.brewerName(b), r.equipment.filter
+        ].filter(Boolean).join(' · '))}</p>
+
+        <div style="height:var(--s5)"></div>
+        <div class="caption">${esc(t('ar.original'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="metric-grid">${params.map(([k, v]) => `
+          <div class="metric-card">
+            <div class="caption">${esc(k)}</div>
+            <div class="metric-card__value"><span class="metric-sm">${esc(v)}</span></div>
+          </div>`).join('')}</div>
+        ${r.equipment.grind_original_note ? `
+          <div style="height:var(--s2)"></div>
+          <p class="dim">${esc(t('param.grind'))} · ${esc(r.equipment.grind_original_note)}</p>` : ''}
+
+        ${summary ? `<div style="height:var(--s6)"></div>${proseBlock(summary)}` : ''}
+        ${special ? `<div style="height:var(--s4)"></div><div class="note">${esc(special.text)}</div>` : ''}
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('ar.timeline'))} · ${esc(t('ar.cumulative'))}</div>
+        <div style="height:var(--s3)"></div>
+        <div class="vt">${rows}</div>
+
+        <div style="height:var(--s4)"></div>
+        <div class="caption">${esc(t('ar.technique'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="ar__tags">${(r.technique_tags || []).map(x => `<span class="tag">${esc(x)}</span>`).join('')}</div>
+
+        <div style="height:var(--s5)"></div>
+        <div class="caption">${esc(t('ar.suited'))}</div>
+        <div style="height:var(--s2)"></div>
+        <div class="ar__tags">
+          ${(r.coffee.suited_for.roast_levels || []).map(x => `<span class="tag">${esc(term('roast_level', x))}</span>`).join('')}
+          ${(r.coffee.suited_for.processes || []).map(x => `<span class="tag">${esc(term('process', x))}</span>`).join('')}
+          ${(r.coffee.suited_for.varieties || []).map(x => `<span class="tag">${esc(x)}</span>`).join('')}
+        </div>
+
+        <div style="height:var(--s6)"></div>
+        <div class="caption">${esc(t('ar.commentary'))}</div>
+        <div style="height:var(--s2)"></div>
+        ${commentary ? proseBlock(commentary) : `<p class="dim">${esc(t('ar.noCommentary'))}</p>`}
+
+        ${r.verify_note ? `
+          <div style="height:var(--s5)"></div>
+          <div class="caption">${esc(t('ar.verifyNote'))}</div>
+          <div style="height:var(--s2)"></div>
+          <p class="dim">${esc(r.verify_note)}</p>` : ''}
+
+        ${(r.source_urls || []).length ? `
+          <div style="height:var(--s5)"></div>
+          <div class="caption">${esc(t('ar.sources'))}</div>
+          <div style="height:var(--s2)"></div>
+          <div class="src">${r.source_urls.map(u =>
+            `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a>`).join('<br>')}</div>` : ''}
+
+        <div style="height:var(--s8)"></div>
+      </div>
+      <div class="footer-actions" style="flex-direction:column;gap:var(--s2)">
+        <button class="btn" data-act="ar-brew" data-id="${esc(r.id)}">${esc(t('ar.convert'))}</button>
+        <p class="dim" style="text-align:center">${esc(t('ar.convertSub'))}</p>
       </div>
     </div>`;
   },
@@ -1373,6 +1621,21 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           this.render(); break;
         case 'tas-save': this.saveLog(); break;
         case 'tas-skip': this.resetTasting(); this.go('home'); break;
+
+        case 'go-archive': this.archive.openId = null; this.go('archive'); break;
+        case 'ar-open':   this.archive.openId = el.dataset.id; this.go('archive-detail'); break;
+        case 'ar-brew':   this.openBrew(el.dataset.id); break;
+        case 'ar-type':   this.archive.type = el.dataset.v; this.render(); break;
+        case 'ar-geo':    this.archive.geometry = this.archive.geometry === el.dataset.v ? null : el.dataset.v; this.render(); break;
+        case 'ar-roast':  this.archive.roast = this.archive.roast === el.dataset.v ? null : el.dataset.v; this.render(); break;
+        case 'ar-diff': {
+          const v = Number(el.dataset.v);
+          this.archive.difficulty = this.archive.difficulty === v ? null : v;
+          this.render(); break;
+        }
+        case 'ar-clear':
+          this.archive = { type:'all', geometry:null, roast:null, difficulty:null, openId:this.archive.openId };
+          this.render(); break;
 
         case 'go-logs':   this.toast = null; this.go('logs'); break;
         case 'log-open':  this.logDetailId = el.dataset.id; this.go('log-detail'); break;
