@@ -6,7 +6,11 @@ globalThis.URL={createObjectURL:()=>'blob:x',revokeObjectURL(){}};
 globalThis.FileReader=class{readAsText(){}};
 globalThis.document={documentElement:{lang:'',setAttribute(){},removeAttribute(){}},
   createElement:()=>({href:'',download:'',click(){},remove(){},style:{}}), body:{appendChild(){}},
-  getElementById:()=>({innerHTML:'',textContent:'',scrollTop:0,style:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},setAttribute(){},removeAttribute(){},dataset:{}}),
+  getElementById:()=>({innerHTML:'',textContent:'',scrollTop:0,style:{},
+    classList:{toggle(){},add(){},remove(){}},addEventListener(){},removeEventListener(){},
+    setAttribute(){},removeAttribute(){},dataset:{},focus(){},
+    querySelector:()=>null, querySelectorAll:()=>[]}),
+  activeElement:null,
   querySelector:()=>null, querySelectorAll:()=>[],
   addEventListener:()=>{}};
 globalThis.localStorage={getItem:k=>mem[k]??null,setItem:(k,v)=>{mem[k]=v},removeItem:k=>{delete mem[k]}};

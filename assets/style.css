@@ -642,3 +642,20 @@ a { color:var(--accent); }
 .doc__k { font-size:var(--f-label); font-weight:600; color:var(--ink); }
 .doc__v { font-size:var(--f-label); color:var(--ink-2); line-height:1.7; margin-top:var(--s1); white-space:pre-line; }
 .doc__wrap { overflow-x:auto; }
+
+/* ══════════════════════════════════════════════════════════
+   터치 응답성
+
+   touch-action: manipulation 은 더블탭 확대를 끄고, 그 대기 시간(약 300ms)을
+   없앱니다. 브라우저는 두 번째 탭을 기다렸다가 확대할지 판단하는데,
+   그 지연이 "버튼이 늦게 먹는다"로 느껴집니다.
+   ══════════════════════════════════════════════════════════ */
+button, .chip, .card-select, .bean, .ar, .wk, .log, .tabbar__item, .rate button,
+.seg button, .segfull button, .mode button, .stepper__btn {
+  touch-action: manipulation;
+}
+
+/* iOS에서 입력 필드 폰트가 16px 미만이면 포커스 시 화면을 확대합니다.
+   확대되면 레이아웃이 틀어지고 되돌아오지 않아 조작이 어려워집니다. */
+input, textarea, select { font-size: 16px; }
+.numfield input { font-size: 16px; }

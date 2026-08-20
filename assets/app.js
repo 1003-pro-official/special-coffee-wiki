@@ -212,6 +212,13 @@ const App = {
     this.settings = Store.load();
     I18n.setLang(this.settings.lang || I18n.detect());
     this.applyTheme();
+
+    /* 이벤트 위임은 #root에 딱 한 번만 겁니다.
+       render()가 innerHTML만 갈아끼우고 #root 자체는 그대로라서,
+       렌더할 때마다 bind하면 리스너가 쌓입니다.
+       그러면 탭 한 번에 핸들러가 여러 번 돌고, 토글은 짝수 번 실행돼
+       아무 일도 안 일어난 것처럼 보입니다. */
+    this.bind(document.getElementById('root'));
     try { await Data.loadAll(I18n.lang); }
     catch (err) { this.renderError(err); return; }
     this.logs = LogStore.all();
@@ -238,8 +245,33 @@ const App = {
     if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
   },
 
+  /** 지금 어떤 화면인지 — 같은 화면 안에서의 재렌더인지 판별하는 데 씁니다 */
+  pageKey() {
+    return this.settings.onboarded ? this.page : `onboard-${this.onboardStep}`;
+  },
+
   render() {
+    // IME 조합 중에 innerHTML을 갈아끼우면 한글이 깨집니다. 조합이 끝난 뒤로 미룹니다.
+    if (this._composing) { this._renderPending = true; return; }
+
     const root = document.getElementById('root');
+    const key = this.pageKey();
+    const samePage = this._lastKey === key;
+
+    /* 같은 화면 안에서의 재렌더면 스크롤 위치를 지킵니다.
+       칩 하나 눌렀다고 목록 맨 위로 튕기면 누른 항목이 화면 밖으로 사라져
+       "안 눌렸다"고 느끼게 됩니다. */
+    const oldScroller = root.querySelector('.scroll');
+    const keepScroll = samePage && oldScroller ? oldScroller.scrollTop : 0;
+
+    // 입력 중이던 필드로 포커스를 되돌립니다 (커서 위치까지)
+    const a = document.activeElement;
+    const focusAct = samePage && a && a.dataset ? (a.dataset.act || null) : null;
+    let selStart = null, selEnd = null;
+    if (focusAct) {
+      try { selStart = a.selectionStart; selEnd = a.selectionEnd; } catch (e) { /* number 입력 등 */ }
+    }
+
     if (!this.settings.onboarded)        root.innerHTML = this.viewOnboard();
     else if (this.page === 'recommend')  root.innerHTML = this.viewRecInput();
     else if (this.page === 'results')    root.innerHTML = this.viewRecResults();
@@ -256,8 +288,22 @@ const App = {
     else if (this.page === 'logs')       root.innerHTML = this.viewLogs();
     else if (this.page === 'log-detail') root.innerHTML = this.viewLogDetail();
     else                                 root.innerHTML = this.viewHome();
-    root.scrollTop = 0;
-    this.bind(root);
+
+    this._lastKey = key;
+
+    const scroller = root.querySelector('.scroll');
+    if (scroller) scroller.scrollTop = keepScroll;
+
+    if (focusAct) {
+      const el = root.querySelector(`[data-act="${focusAct}"]`);
+      if (el && typeof el.focus === 'function') {
+        el.focus({ preventScroll: true });
+        if (selStart != null && el.setSelectionRange) {
+          try { el.setSelectionRange(selStart, selEnd); } catch (e) { /* noop */ }
+        }
+      }
+    }
+
     if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
   },
 
@@ -301,7 +347,6 @@ const App = {
 npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         <button class="btn btn--secondary" data-act="reload">${esc(t('error.retry'))}</button>
       </div>`;
-    document.querySelector('[data-act="reload"]')?.addEventListener('click', () => location.reload());
   },
 
   /* ══════════ 온보딩 ══════════ */
@@ -2095,6 +2140,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       const rec = this.settings.rec;
 
       switch (act) {
+        case 'reload': location.reload(); break;
         case 'lang':  this.setLang(el.dataset.v); break;
         case 'theme': this.patch({ theme: el.dataset.v }); this.applyTheme(); this.render(); break;
 
@@ -2222,6 +2268,14 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           }
           break;
       }
+    });
+
+    /* 한글 입력은 조합(composition) 단위로 동작합니다.
+       조합 중에 재렌더가 끼어들면 글자가 깨지므로 끝날 때까지 미룹니다. */
+    root.addEventListener('compositionstart', () => { this._composing = true; });
+    root.addEventListener('compositionend', () => {
+      this._composing = false;
+      if (this._renderPending) { this._renderPending = false; this.render(); }
     });
 
     root.addEventListener('change', (e) => {
