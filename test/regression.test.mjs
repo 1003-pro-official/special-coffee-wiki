@@ -34,9 +34,17 @@ globalThis.document = {
 };
 globalThis.localStorage = { getItem:k=>mem[k]??null, setItem:(k,v)=>{mem[k]=v}, removeItem:k=>{delete mem[k]} };
 Object.defineProperty(globalThis,'navigator',{value:{language:'ko-KR'},configurable:true});
-globalThis.location = { protocol:'http:', reload(){} };
+globalThis.location = { protocol:'http:', pathname:'/', search:'', hash:'', reload(){},
+  replace(u){ const i=String(u).indexOf('#'); this.hash = i<0?'':String(u).slice(i); } };
 globalThis.confirm = () => true;
-globalThis.window = {};
+/* window 리스너도 세어야 합니다 — hashchange가 누적되면 뒤로가기 한 번에
+   핸들러가 여러 번 돌아 화면을 여러 칸 건너뜁니다. click과 같은 종류의 버그입니다. */
+const winL = {};
+globalThis.window = {
+  _listeners: winL,
+  addEventListener(type, fn) { (winL[type] ||= []).push(fn); },
+  count(type) { return (winL[type] || []).length }
+};
 globalThis.requestAnimationFrame = () => 0;
 globalThis.cancelAnimationFrame = () => {};
 globalThis.Blob = class {}; globalThis.URL = { createObjectURL:()=>'', revokeObjectURL(){} };
@@ -44,8 +52,9 @@ globalThis.FileReader = class { readAsText(){} };
 globalThis.fetch = async p => ({ ok:true, status:200, json: async()=>JSON.parse(fs.readFileSync(p,'utf-8')) });
 
 const strip = s => s.replace(/if \(typeof module[\s\S]*$/,'');
-for (const f of ['engine','brew','logs','flavor','analysis'])
+for (const f of ['engine','brew','logs','flavor','analysis','router'])
   eval(strip(fs.readFileSync(`assets/${f}.js`,'utf-8')));
+eval(strip(fs.readFileSync('assets/router.js','utf-8')) + '\n;Object.assign(globalThis,{Router});');
 eval(strip(fs.readFileSync('assets/engine.js','utf-8')) + '\n;Object.assign(globalThis,{Grind,Score,Convert,Engine});');
 eval(strip(fs.readFileSync('assets/brew.js','utf-8')) + '\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
 eval(strip(fs.readFileSync('assets/logs.js','utf-8')) + '\n;Object.assign(globalThis,{LogEntry,LogStore});');
@@ -59,6 +68,8 @@ console.log('\n════ 이벤트 리스너 누적 (핵심 회귀) ═══
 await App.init();
 const after1 = root.count('click');
 ok(after1 === 1, `init 후 click 리스너 1개 (${after1}개)`);
+ok(window.count('hashchange') === 1, `hashchange 리스너 1개 (${window.count('hashchange')}개)`);
+ok(window.count('beforeunload') === 1, `beforeunload 리스너 1개 (${window.count('beforeunload')}개)`);
 
 for (let i = 0; i < 30; i++) App.render();
 const after30 = root.count('click');

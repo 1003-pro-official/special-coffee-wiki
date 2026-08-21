@@ -222,7 +222,33 @@ const App = {
     try { await Data.loadAll(I18n.lang); }
     catch (err) { this.renderError(err); return; }
     this.logs = LogStore.all();
-    this.render();
+
+    /* 라우팅.
+       리스너는 bind()와 마찬가지로 딱 한 번만 겁니다.
+
+       주소를 먼저 읽고 화면을 정합니다 — 남이 보낸 레시피 링크나
+       새로고침으로 들어온 경우 그 화면이 나와야 합니다. */
+    window.addEventListener('hashchange', () => this.onHashChange());
+
+    /* 탭 닫기와 새로고침도 막습니다. 뒤로가기만 막으면 반쪽입니다 —
+       주소창을 잘못 건드리거나 당겨서 새로고침되는 일이 더 흔합니다.
+
+       브라우저는 여기서 준 문구를 무시하고 자체 문구를 띄웁니다.
+       preventDefault만 하면 됩니다. */
+    window.addEventListener('beforeunload', (e) => {
+      if (this.page === 'brew' && this.brew.session && !this.brew.session.finished) {
+        e.preventDefault();
+        e.returnValue = '';       // 구형 브라우저용
+        return '';
+      }
+    });
+
+    if (this.settings.onboarded && location.hash) {
+      this.applyRoute(Router.parse(location.hash));
+    } else {
+      this.syncHash();
+      this.render();
+    }
   },
 
   applyTheme() {
@@ -307,7 +333,113 @@ const App = {
     if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
   },
 
-  go(page) { this.page = page; this.render(); },
+  /* ══════════ 라우팅 ══════════
+
+     화면 이동을 주소창에 반영합니다. 그래야 안드로이드 백버튼과 iOS 엣지
+     스와이프가 "앱 안에서 뒤로"가 됩니다. 이게 없으면 추출 도중 실수로
+     뒤로가기를 눌렀을 때 브라우저가 이전 사이트로 나가버립니다.
+
+     주의: 해시를 바꾸면 hashchange가 뜹니다. go()로 스스로 바꾼 것까지
+     되받아 처리하면 화면을 두 번 그리게 되므로 걸러내야 합니다.
+
+     걸러낼 때 불린 플래그를 쓰면 안 됩니다. 해시 변경이 이벤트를 쏘지 않는
+     경우(같은 값으로 replace 등)에 플래그가 켜진 채 남아, **다음번 진짜
+     뒤로가기를 삼켜버립니다.** 그래서 "내가 방금 만든 주소" 자체를 기억하고
+     그 값이 왔을 때만 무시합니다. 값이 안 맞으면 사용자의 이동이니 처리합니다. */
+
+  /** 내가 만든 이동임을 표시. 이벤트가 안 올 수도 있어 표식을 오래 남기지 않습니다. */
+  _markSelfNav(hash) {
+    this._selfNav = hash;
+    if (typeof setTimeout !== 'undefined') {
+      setTimeout(() => { if (this._selfNav === hash) this._selfNav = null; }, 0);
+    }
+  },
+
+  /** URL에 담을 현재 상태 */
+  routeState() {
+    return {
+      page: this.page,
+      recipeId: this.brew.result?.recipe?.id ?? null,
+      archiveId: this.archive.openId,
+      beanId: this.flavor.openBean,
+      wikiId: this.wikiId,
+      logId: this.logDetailId,
+      drill: this.flavor.drill
+    };
+  },
+
+  /** 주소를 실제로 바꿉니다. push면 히스토리가 쌓이고, replace면 덮어씁니다. */
+  _setHash(want, replace) {
+    if (typeof location === 'undefined' || location.hash === want) return;
+    this._markSelfNav(want);
+    if (replace && location.replace) {
+      location.replace(`${location.pathname}${location.search}${want}`);
+    } else {
+      location.hash = want;
+    }
+  },
+
+  /** 상태가 바뀐 뒤 주소만 맞춥니다 (히스토리는 쌓지 않음) */
+  syncHash() {
+    this._setHash(Router.toHash(this.routeState()), true);
+  },
+
+  go(page, opts = {}) {
+    this.page = page;
+    // replace=true면 뒤로 갔을 때 되돌아오면 안 되는 화면입니다 (완료 화면 등)
+    this._setHash(Router.toHash(this.routeState()), !!opts.replace);
+    this.render();
+  },
+
+  /** 주소가 바뀌었을 때 (뒤로가기 · 앞으로가기 · 붙여넣은 링크) */
+  onHashChange() {
+    if (this._selfNav === location.hash) { this._selfNav = null; return; }
+
+    /* 추출이 도는 중이면 함부로 나가지 않습니다.
+       hashchange는 주소가 이미 바뀐 뒤에 옵니다. 그래서 "막는다"는 건
+       사용자가 취소했을 때 주소를 되돌려놓는다는 뜻입니다. */
+    if (this.page === 'brew' && this.brew.session && !this.brew.session.finished) {
+      if (!confirm(t('brew.exitConfirm'))) {
+        // 취소 — 주소를 타이머 화면으로 되돌립니다.
+        // 히스토리를 하나 더 쌓아서라도 사용자를 여기 붙잡아 둡니다.
+        this._setHash(Router.toHash(this.routeState()), false);
+        return;
+      }
+      this.brew.session.stop();
+      this.brew.session = null;
+      WakeLock.release();
+    }
+
+    this.applyRoute(Router.parse(location.hash));
+  },
+
+  /** 파싱된 주소를 화면 상태로 옮깁니다 */
+  applyRoute(st) {
+    const target = Router.entry(st, !!this.brew.session);
+
+    switch (target.page) {
+      case 'brew-prep':
+      case 'brew':
+      case 'brew-done':
+        // 다른 레시피 주소면 그 레시피를 열어야 합니다
+        if (target.recipeId && this.brew.result?.recipe?.id !== target.recipeId) {
+          if (!this.openBrew(target.recipeId, { silent: true })) {
+            this.page = 'archive'; this.syncHash(); this.render(); return;
+          }
+        }
+        break;
+      case 'archive-detail': this.archive.openId = target.archiveId; break;
+      case 'bean':           this.flavor.openBean = target.beanId; break;
+      case 'wiki-doc':       this.wikiId = target.wikiId; break;
+      case 'log-detail':     this.logDetailId = target.logId; break;
+      case 'flavor':         this.flavor.drill = target.drill ?? null; break;
+    }
+
+    this.page = target.page;
+    // 되돌려진 화면과 주소가 어긋나면(예: timer → prep) 주소를 맞춥니다
+    this.syncHash();
+    this.render();
+  },
 
   /* ── 추천 컨텍스트 ── */
   ctx() {
@@ -820,15 +952,18 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
   /** 추천 결과에서 추출 세션을 엽니다.
       변환된 steps(r.steps)를 씁니다 — 원본이 아니라 내 장비에 맞춰 보정된 타임라인입니다. */
-  openBrew(recipeId) {
+  openBrew(recipeId, opts = {}) {
     const r = this.results?.find(x => x.recipe.id === recipeId)
            || (Data.byId.recipe[recipeId] ? this.makeResult(Data.byId.recipe[recipeId]) : null);
-    if (!r) return;
+    if (!r) return false;              // 없는 레시피 id — 링크로 들어온 경우 호출부가 처리
     this.brew.result = r;
     this.brew.plan = BrewPlan.build(r.steps);
     this.brew.session = null;
     this.brew.wakeFailed = false;
-    this.go('brew-prep');
+    // silent는 주소를 보고 상태를 맞추는 중이라는 뜻입니다.
+    // 여기서 go()를 부르면 히스토리가 한 칸 더 쌓여 뒤로가기가 두 번 필요해집니다.
+    if (!opts.silent) this.go('brew-prep');
+    return true;
   },
 
   stepName(step) {
@@ -1037,8 +1172,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
     const b = this.brew;
     Alerts.enabled = b.sound;
     b.session = new BrewSession(b.plan, (s) => this.paintBrew(s));
-    this.page = 'brew';
-    this.render();
+    this.go('brew');
 
     /* 백그라운드에 갔다 돌아오면 브라우저가 잠금을 풀어둡니다.
        WakeLock이 알아서 다시 잡되, 성공 여부를 버튼에 반영해야
@@ -1059,8 +1193,9 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
     const b = this.brew;
     b.session?.stop();
     WakeLock.release();
-    this.page = 'brew-done';
-    this.render();
+    /* replace를 씁니다 — 완료 화면에서 뒤로가기를 눌렀을 때 이미 끝난 타이머로
+       돌아가면 아무것도 할 수 없는 화면을 보게 됩니다. 준비 화면으로 가야 합니다. */
+    this.go('brew-done', { replace: true });
   },
 
   exitBrew() {
@@ -2206,7 +2341,9 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         }
         case 'prev': this.onboardStep = Math.max(1, this.onboardStep - 1); this.render(); break;
         case 'next': this.onboardStep = Math.min(4, this.onboardStep + 1); this.render(); break;
-        case 'finish': this.patch({ onboarded: true }); this.render(); break;
+        // 온보딩 중에는 주소를 쓰지 않습니다(단계는 히스토리에 남길 만한 게 아닙니다).
+        // 끝나고 나서야 홈 주소를 잡습니다.
+        case 'finish': this.patch({ onboarded: true }); this.page = 'home'; this.go('home', { replace: true }); break;
 
         case 'go-rec':  this.go('recommend'); break;
         case 'go-home': this.go('home'); break;
@@ -2265,11 +2402,14 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         case 'go-wiki':    this.wikiId = null; this.go('wiki'); break;
         case 'wiki-open':  this.wikiId = el.dataset.id; this.go('wiki-doc'); break;
 
-        case 'fl-drill':   this.flavor.drill = el.dataset.v; this.render(); break;
+        /* 드릴다운은 필터가 아니라 이동입니다. 주소에 남겨야 뒤로가기가
+           "위로 올라가기"가 됩니다. 반대로 fl-toggle(다중 선택)은 남기지 않습니다 —
+           칩 누를 때마다 히스토리가 쌓이면 뒤로가기를 열두 번 눌러야 합니다. */
+        case 'fl-drill':   this.flavor.drill = el.dataset.v; this.go('flavor'); break;
         case 'fl-up': {
           const cur = FlavorTree.byId(Data.flavorNodes, this.flavor.drill);
           this.flavor.drill = cur?.parent || null;
-          this.render(); break;
+          this.go('flavor'); break;
         }
         case 'fl-toggle':  this.flavor.selected = toggle(this.flavor.selected, el.dataset.v); this.render(); break;
         case 'fl-mode':    this.flavor.mode = el.dataset.v; this.render(); break;

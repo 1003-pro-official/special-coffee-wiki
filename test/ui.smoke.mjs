@@ -15,9 +15,29 @@ globalThis.document={documentElement:{lang:'',setAttribute(){},removeAttribute()
   addEventListener:()=>{}};
 globalThis.localStorage={getItem:k=>mem[k]??null,setItem:(k,v)=>{mem[k]=v},removeItem:k=>{delete mem[k]}};
 Object.defineProperty(globalThis,'navigator',{value:{language:'ko-KR'},configurable:true});
-globalThis.location={protocol:'http:',reload(){}};
-globalThis.confirm=()=>true;
-globalThis.window={};
+/* 해시 히스토리 흉내.
+   go()가 주소를 바꾸고, 뒤로가기가 hashchange를 쏘는 것까지 재현해야
+   라우팅을 실제로 검증할 수 있습니다. */
+const winL={};
+globalThis.location={protocol:'http:',pathname:'/special-coffee-wiki/',search:'',hash:'',
+  reload(){},
+  replace(u){ const h=String(u).indexOf('#'); this.hash = h<0?'':String(u).slice(h); NAV.replaceTop(this.hash); NAV.fire(); }};
+Object.defineProperty(globalThis.location,'hash',{
+  get(){ return NAV.stack[NAV.i] ?? '' },
+  set(v){ NAV.push(v); NAV.fire(); },
+  configurable:true});
+const NAV={
+  stack:[''], i:0,
+  push(h){ if(h===this.stack[this.i])return; this.stack=this.stack.slice(0,this.i+1); this.stack.push(h); this.i++ },
+  replaceTop(h){ this.stack[this.i]=h },
+  back(){ if(this.i>0){ this.i--; this.fire() } },
+  fire(){ for(const f of (winL.hashchange||[])) f({}) },
+  reset(h=''){ this.stack=[h]; this.i=0 }
+};
+globalThis.NAV=NAV;
+let confirmAnswer=true;
+globalThis.confirm=()=>confirmAnswer;
+globalThis.window={addEventListener(t,f){ (winL[t] ??= []).push(f) }};
 globalThis.requestAnimationFrame=f=>{rafQ.push(f);return rafQ.length};
 globalThis.cancelAnimationFrame=()=>{};
 globalThis.fetch=async p=>({ok:true,status:200,json:async()=>JSON.parse(fs.readFileSync(p,'utf-8'))});
@@ -29,6 +49,7 @@ eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalTh
 eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(strip(fs.readFileSync('assets/flavor.js','utf-8'))+'\n;Object.assign(globalThis,{FlavorTree,Wheel});');
 eval(strip(fs.readFileSync('assets/analysis.js','utf-8'))+'\n;Object.assign(globalThis,{Extraction,Analysis,Chart});');
+eval(strip(fs.readFileSync('assets/router.js','utf-8'))+'\n;Object.assign(globalThis,{Router});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
@@ -459,6 +480,165 @@ console.log('\n[앵커 신뢰도 경고]');
 
   App.settings.onboarded=true;
   App.settings.grinder_id='timemore-chestnut-c3'; App.settings.grind_anchor=20;
+}
+
+console.log('\n[라우팅 — 주소가 화면을 따라가는가]');
+{
+  // 앱이 hashchange를 듣도록 리스너를 겁니다 (init()의 그 부분만 재현)
+  window.addEventListener('hashchange', () => App.onHashChange());
+  NAV.reset(''); App._selfNav=null;
+
+  App.go('home');
+  ok(location.hash==='#/', `홈 → ${location.hash}`);
+
+  App.go('archive');
+  ok(location.hash==='#/archive', `아카이브 → ${location.hash}`);
+
+  App.archive.openId='kasuya-46'; App.go('archive-detail');
+  ok(location.hash==='#/recipe/kasuya-46', `레시피 상세 → ${location.hash}`);
+
+  App.wikiId=Data.wiki[0].id; App.go('wiki-doc');
+  ok(location.hash===`#/wiki/${Data.wiki[0].id}`, `위키 문서 → ${location.hash}`);
+
+  App.flavor.openBean='origin-id-sumatra-wethulled'; App.go('bean');
+  ok(location.hash==='#/bean/origin-id-sumatra-wethulled', `원두 상세 → ${location.hash}`);
+}
+
+console.log('\n[뒤로가기]');
+{
+  NAV.reset(''); App._selfNav=null;
+  App.archive.openId=null; App.flavor.openBean=null; App.wikiId=null;
+  App.go('home'); App.go('archive');
+  App.archive.openId='kasuya-46'; App.go('archive-detail');
+  ok(App.page==='archive-detail', '상세까지 들어옴');
+
+  NAV.back();
+  ok(App.page==='archive', `뒤로 → ${App.page}`);
+  NAV.back();
+  ok(App.page==='home', `한 번 더 뒤로 → ${App.page}`);
+}
+
+console.log('\n[필터는 주소를 더럽히지 않아야 함]');
+{
+  NAV.reset(''); App._selfNav=null;
+  App.archive={type:'all',geometry:null,roast:null,difficulty:null,openId:null};
+  App.go('archive');
+  const depth=NAV.stack.length;
+  App.archive.type='championship'; App.render();
+  App.archive.geometry='cone'; App.render();
+  App.archive.difficulty=3; App.render();
+  ok(NAV.stack.length===depth, `필터 3번 조작해도 히스토리 그대로 (${NAV.stack.length}칸)`);
+  ok(location.hash==='#/archive', `주소도 그대로 → ${location.hash}`);
+
+  // 반대로 드릴다운은 이동이라 남아야 합니다
+  App.flavor={drill:null,selected:[],mode:'or',openBean:null};
+  App.go('flavor');
+  const d2=NAV.stack.length;
+  App.flavor.drill='fruity'; App.go('flavor');
+  ok(NAV.stack.length===d2+1, '향미 드릴다운은 히스토리에 쌓임');
+  ok(location.hash==='#/flavor/fruity', `드릴 주소 → ${location.hash}`);
+  NAV.back();
+  ok(App.flavor.drill===null, '뒤로가기가 "위로 올라가기"가 됨');
+}
+
+console.log('\n[링크로 바로 들어오기]');
+{
+  NAV.reset(''); App._selfNav=null;
+  App.brew.result=null; App.brew.session=null;
+
+  App.applyRoute(Router.parse('#/brew/kasuya-46'));
+  ok(App.page==='brew-prep', `레시피 링크 → ${App.page}`);
+  ok(App.brew.result?.recipe.id==='kasuya-46', '해당 레시피가 열림');
+  ok(App.brew.plan?.timeline.length>0, '타임라인까지 준비됨');
+
+  // 세션 없이 타이머 주소로 들어오면 준비 화면으로
+  App.brew.session=null;
+  App.applyRoute(Router.parse('#/brew/kasuya-46/timer'));
+  ok(App.page==='brew-prep', `세션 없는 타이머 링크 → ${App.page}`);
+  ok(location.hash==='#/brew/kasuya-46', `주소도 바로잡힘 → ${location.hash}`);
+
+  // 없는 레시피
+  App.applyRoute(Router.parse('#/brew/이런레시피는없다'));
+  ok(App.page==='archive', `없는 레시피 링크 → ${App.page}`);
+
+  // 이상한 주소들
+  let bad=[];
+  for(const h of ['#/없는화면','#/brew','#/recipe','#/%%%','#////','#/a/b/c/d']){
+    try{ App.applyRoute(Router.parse(h)); if(!App.page) bad.push(h); }
+    catch(e){ bad.push(`${h}: ${e.message}`) }
+  }
+  ok(bad.length===0, '이상한 주소 6종에도 예외 없이 화면이 나옴'+(bad.length?` → ${bad.join(', ')}`:''));
+}
+
+console.log('\n[추출 중 이탈 방지]');
+{
+  NAV.reset(''); App._selfNav=null;
+  App.openBrew('kasuya-46');
+  App.brew.session=new BrewSession(App.brew.plan,()=>{});
+  App.brew.session.startedAt=Date.now();
+  App.go('brew');
+  const at=location.hash;
+  ok(at==='#/brew/kasuya-46/timer', `타이머 주소 → ${at}`);
+
+  confirmAnswer=false;
+  NAV.back();
+  ok(App.page==='brew', '취소하면 타이머에 남음');
+  ok(location.hash===at, `주소도 되돌려짐 → ${location.hash}`);
+  ok(App.brew.session!==null, '세션이 살아 있음');
+
+  confirmAnswer=true;
+  NAV.back();
+  ok(App.page!=='brew', `확인하면 나감 → ${App.page}`);
+  ok(App.brew.session===null, '세션이 정리됨');
+
+  // 끝난 세션은 붙잡지 않아야 합니다
+  NAV.reset(''); App._selfNav=null;
+  App.openBrew('kasuya-46');
+  App.brew.session=new BrewSession(App.brew.plan,()=>{});
+  App.go('brew');
+  App.brew.session.finished=true;
+  confirmAnswer=false;
+  NAV.back();
+  ok(App.page!=='brew', '이미 끝난 추출은 확인 없이 나감');
+  confirmAnswer=true;
+}
+
+console.log('\n[자기 이동 표식이 남아 뒤로가기를 삼키지 않는가]');
+{
+  /* 불린 플래그를 쓰면, 해시 변경이 이벤트를 안 쏘는 경우에 플래그가 켜진 채
+     남아서 다음번 진짜 뒤로가기를 통째로 삼킵니다. 표식을 주소값으로 두는
+     이유가 이것이고, 여기서 그 상황을 만들어 확인합니다. */
+  NAV.reset(''); App._selfNav=null;
+  App.brew.session=null; App.archive.openId=null;
+  App.go('home'); App.go('archive');
+
+  // 이벤트가 유실된 상황을 흉내 — 표식만 남기고 주소는 그대로
+  App._markSelfNav('#/이벤트가안온주소');
+
+  NAV.back();
+  ok(App.page==='home', `표식이 남아 있어도 뒤로가기가 동작 → ${App.page}`);
+}
+
+console.log('\n[주소 ↔ 상태 어긋남 없음]');
+{
+  NAV.reset(''); App._selfNav=null;
+  App.brew.session=null;
+  let bad=[];
+  const cases=[
+    ['home',()=>{}], ['recommend',()=>{}], ['archive',()=>{}], ['logs',()=>{}],
+    ['wiki',()=>{}], ['analysis',()=>{}],
+    ['archive-detail',()=>{App.archive.openId='kasuya-46'}],
+    ['bean',()=>{App.flavor.openBean='origin-id-sumatra-wethulled'}],
+    ['wiki-doc',()=>{App.wikiId=Data.wiki[1].id}],
+    ['brew-prep',()=>{App.openBrew('hoffmann-v60',{silent:true})}]
+  ];
+  for(const [page,setup] of cases){
+    setup(); App.go(page);
+    const back=Router.parse(location.hash);
+    const entry=Router.entry(back,false);
+    if(entry.page!==page) bad.push(`${page} → ${location.hash} → ${entry.page}`);
+  }
+  ok(bad.length===0, `화면 ${cases.length}종 전부 주소와 일치`+(bad.length?` → ${bad.join(' / ')}`:''));
 }
 
 console.log(fail?`\n★ 실패 ${fail}/${n}`:`\n전체 통과 ${n}건`);
