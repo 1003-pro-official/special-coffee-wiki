@@ -20,13 +20,6 @@
       "재질 표기는 material 코드에서 terms.json으로 조회해 조합합니다. 예: 'Hario V60 02' + '(플라스틱 / Plastic)'",
       "show_material=false인 항목은 재질을 표시하지 않습니다(별칭이 있거나 재질 구분이 없는 모델).",
       "character / coach_note는 서술형이라 {ko, en, source_lang} 구조이며, en이 null이면 폴백 배지를 띄웁니다."
-    ],
-    "아이콘": [
-      "icon은 assets/icons.js의 형태 키입니다. 제품 사진이 아니라 자체 SVG 선화입니다.",
-      "제조사 사진은 저작권이 있어 쓸 수 없고, 형태만 남기는 편이 오히려 구분이 쉽습니다.",
-      "cone 큰 배출구 원뿔 / cone_small 작은 배출구 원뿔 / flute 세로 주름 원뿔 /",
-      "flat3 평바닥 3구 / flat1 평바닥 1구 / valve 밸브형 / hourglass 일체형 / press 가압",
-      "icon이 없어도 icons.js가 geometry와 hole로 형태를 추정합니다."
     ]
   },
   "brewers": [
@@ -68,8 +61,7 @@
         "source_lang": "ko"
       },
       "name_base": "Hario V60 02",
-      "show_material": true,
-      "icon": "cone"
+      "show_material": true
     },
     {
       "id": "hario-v60-02-ceramic",
@@ -109,8 +101,7 @@
         "source_lang": "ko"
       },
       "name_base": "Hario V60 02",
-      "show_material": true,
-      "icon": "cone"
+      "show_material": true
     },
     {
       "id": "hario-v60-01-plastic",
@@ -148,8 +139,7 @@
         "source_lang": "ko"
       },
       "name_base": "Hario V60 01",
-      "show_material": true,
-      "icon": "cone"
+      "show_material": true
     },
     {
       "id": "kalita-wave-185-steel",
@@ -185,8 +175,7 @@
         "source_lang": "ko"
       },
       "name_base": "Kalita Wave 185",
-      "show_material": true,
-      "icon": "flat3"
+      "show_material": true
     },
     {
       "id": "kalita-wave-155-steel",
@@ -222,8 +211,7 @@
         "source_lang": null
       },
       "name_base": "Kalita Wave 155",
-      "show_material": true,
-      "icon": "flat3"
+      "show_material": true
     },
     {
       "id": "origami-m-ceramic",
@@ -261,8 +249,7 @@
         "source_lang": "ko"
       },
       "name_base": "Origami Dripper M",
-      "show_material": true,
-      "icon": "flute"
+      "show_material": true
     },
     {
       "id": "orea-v4",
@@ -299,8 +286,7 @@
         "source_lang": "ko"
       },
       "name_base": "Orea Brewer V4",
-      "show_material": false,
-      "icon": "flat1"
+      "show_material": false
     },
     {
       "id": "april-plastic",
@@ -337,8 +323,7 @@
         "source_lang": null
       },
       "name_base": "April Brewer",
-      "show_material": true,
-      "icon": "cone"
+      "show_material": true
     },
     {
       "id": "hario-switch-03",
@@ -376,8 +361,7 @@
         "source_lang": "ko"
       },
       "name_base": "Hario Switch 03",
-      "show_material": false,
-      "icon": "valve"
+      "show_material": false
     },
     {
       "id": "chemex-6cup",
@@ -414,8 +398,7 @@
         "source_lang": "ko"
       },
       "name_base": "Chemex 6cup",
-      "show_material": false,
-      "icon": "hourglass"
+      "show_material": false
     },
     {
       "id": "fellow-stagg-x",
@@ -452,8 +435,7 @@
         "source_lang": null
       },
       "name_base": "Fellow Stagg [X]",
-      "show_material": false,
-      "icon": "flat1"
+      "show_material": false
     },
     {
       "id": "melitta-1x2",
@@ -493,8 +475,7 @@
       "aka": {
         "ko": "아로마필터",
         "en": "Aroma Filter"
-      },
-      "icon": "cone_small"
+      }
     },
     {
       "id": "clever-dripper",
@@ -536,8 +517,7 @@
       "aka": {
         "ko": "스마트 드리퍼",
         "en": "Smart Dripper"
-      },
-      "icon": "valve"
+      }
     },
     {
       "id": "aeropress",
@@ -574,8 +554,7 @@
         "source_lang": "ko"
       },
       "name_base": "AeroPress",
-      "show_material": false,
-      "icon": "press"
+      "show_material": false
     },
     {
       "id": "cafec-flower-cup1",
@@ -612,8 +591,7 @@
         "source_lang": null
       },
       "name_base": "Cafec Flower Dripper Cup1",
-      "show_material": false,
-      "icon": "flute"
+      "show_material": false
     },
     {
       "id": "timemore-crystal-eye",
@@ -650,8 +628,7 @@
         "source_lang": null
       },
       "name_base": "Timemore Crystal Eye 02",
-      "show_material": false,
-      "icon": "cone"
+      "show_material": false
     },
     {
       "id": "solo-dripper",
@@ -688,8 +665,7 @@
         "source_lang": "ko"
       },
       "name_base": "Solo Dripper",
-      "show_material": false,
-      "icon": "cone"
+      "show_material": false
     }
   ]
 }

@@ -29,7 +29,6 @@ eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalTh
 eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(strip(fs.readFileSync('assets/flavor.js','utf-8'))+'\n;Object.assign(globalThis,{FlavorTree,Wheel});');
 eval(strip(fs.readFileSync('assets/analysis.js','utf-8'))+'\n;Object.assign(globalThis,{Extraction,Analysis,Chart});');
-eval(strip(fs.readFileSync('assets/icons.js','utf-8'))+'\n;Object.assign(globalThis,{BrewerIcon});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
@@ -58,22 +57,6 @@ const origTotal=BrewPlan.build(conv.recipe.steps).totalS;
 ok(App.brew.plan.totalS<=origTotal,
    `변환된 타임라인 사용: ${App.brew.plan.totalS}s (원본 ${origTotal}s)`);
 App.openBrew(top);
-
-console.log('\n[드리퍼 아이콘]');
-{
-  App.settings.onboarded=false; App.onboardStep=1;
-  const h=App.viewOnboard();
-  const n=(h.match(/dripper-icon/g)||[]).length;
-  ok(n>=6, `온보딩 드리퍼 카드에 아이콘 ${n}개`);
-  ok(h.includes('stroke="currentColor"'), '다크 모드 자동 대응');
-  ok(!h.includes('<img'), '외부 이미지 없음 — 제품 사진 미사용');
-  App.settings.onboarded=true;
-
-  App.archive={type:'all',geometry:null,roast:null,difficulty:null,openId:null};
-  const ar=App.viewArchive();
-  ok((ar.match(/dripper-icon/g)||[]).length>=10, '아카이브 카드에도 형태 아이콘');
-  ok(!ar.includes('undefined')&&!ar.includes('NaN'), '아카이브 렌더 정상');
-}
 
 console.log('\n[화면 렌더]');
 for(const [name,page,fn] of [['준비','brew-prep',()=>App.viewBrewPrep()],

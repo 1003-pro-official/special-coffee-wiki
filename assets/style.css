@@ -659,21 +659,3 @@ button, .chip, .card-select, .bean, .ar, .wk, .log, .tabbar__item, .rate button,
    확대되면 레이아웃이 틀어지고 되돌아오지 않아 조작이 어려워집니다. */
 input, textarea, select { font-size: 16px; }
 .numfield input { font-size: 16px; }
-
-/* ══════════════════════════════════════════════════════════
-   드리퍼 형태 아이콘 (자체 SVG 선화 — 제품 사진 미사용)
-   ══════════════════════════════════════════════════════════ */
-.dripper-icon { display:block; color:inherit; }
-
-.card-select--gear { display:flex; flex-direction:column; align-items:center; text-align:center; }
-.card-select__icon {
-  display:flex; align-items:center; justify-content:center;
-  height:48px; margin-bottom:var(--s2);
-  color:var(--ink-3); transition:color .12s;
-}
-.card-select[aria-pressed="true"] .card-select__icon { color:var(--accent); }
-.card-select--gear .card-select__meta { margin-top:2px; }
-
-/* 요약 줄에 붙는 작은 아이콘 */
-.row__value--icon { display:inline-flex; align-items:center; gap:var(--s2); justify-content:flex-end; }
-.row__value--icon .dripper-icon { color:var(--ink-3); flex-shrink:0; }
