@@ -27,7 +27,8 @@ const root = makeRoot();
 const mem = {};
 globalThis.document = {
   documentElement: { lang:'', setAttribute(){}, removeAttribute(){} },
-  getElementById: (id) => id === 'root' ? root : null,
+  getElementById: (id) => id === 'root' ? root
+    : { id, innerHTML:'', hidden:false, addEventListener(){}, setAttribute(){}, removeAttribute(){} },
   querySelector: () => null, querySelectorAll: () => [],
   addEventListener: () => {}, createElement: () => ({ click(){}, remove(){}, style:{} }),
   body: { appendChild(){} }, activeElement: null
@@ -54,7 +55,7 @@ globalThis.fetch = async p => ({ ok:true, status:200, json: async()=>JSON.parse(
 const strip = s => s.replace(/if \(typeof module[\s\S]*$/,'');
 for (const f of ['engine','brew','logs','flavor','analysis','router'])
   eval(strip(fs.readFileSync(`assets/${f}.js`,'utf-8')));
-eval(strip(fs.readFileSync('assets/router.js','utf-8')) + '\n;Object.assign(globalThis,{Router});');
+eval(strip(fs.readFileSync('assets/router.js','utf-8')) + '\n;Object.assign(globalThis,{Router,SW});');
 eval(strip(fs.readFileSync('assets/engine.js','utf-8')) + '\n;Object.assign(globalThis,{Grind,Score,Convert,Engine});');
 eval(strip(fs.readFileSync('assets/brew.js','utf-8')) + '\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
 eval(strip(fs.readFileSync('assets/logs.js','utf-8')) + '\n;Object.assign(globalThis,{LogEntry,LogStore});');

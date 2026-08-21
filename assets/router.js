@@ -152,6 +152,64 @@ const Router = {
 function enc(v) { return encodeURIComponent(v == null ? '' : String(v)); }
 function decodeSafe(v) { try { return decodeURIComponent(v); } catch (e) { return v; } }
 
+/* ══════════════════════════════════════════════════════════
+   SW — 서비스 워커 등록과 업데이트
+
+   여기에 둔 이유: 라우터와 마찬가지로 화면과 무관한 배선이라
+   app.js(2,300줄)를 더 키우지 않기 위해서입니다.
+
+   자동으로 새로고침하지 않습니다. 추출 3분 중에 앱이 갈아끼워지면
+   타이머가 날아갑니다. 새 버전이 준비되면 알리기만 하고, 적용은
+   사용자가 누를 때 합니다.
+   ══════════════════════════════════════════════════════════ */
+const SW = {
+  waiting: null,
+  onUpdate: null,
+  _reloading: false,
+
+  async register(path = 'sw.js') {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
+    // file:// 로 열면 등록할 수 없습니다. 개발 중에 콘솔만 더럽히므로 건너뜁니다.
+    if (typeof location !== 'undefined' && location.protocol === 'file:') return null;
+
+    try {
+      const reg = await navigator.serviceWorker.register(path);
+      const watch = (w) => {
+        if (!w) return;
+        const check = () => {
+          /* controller가 없다는 건 첫 설치라는 뜻입니다. 알릴 "업데이트"가
+             없으니 조용히 넘어갑니다. */
+          if (w.state === 'installed' && navigator.serviceWorker.controller) {
+            this.waiting = w;
+            this.onUpdate?.();
+          }
+        };
+        check();
+        w.addEventListener('statechange', check);
+      };
+      watch(reg.waiting);
+      reg.addEventListener('updatefound', () => watch(reg.installing));
+      return reg;
+    } catch (e) {
+      // 등록에 실패해도 앱은 그대로 동작합니다. 오프라인만 안 될 뿐입니다.
+      return null;
+    }
+  },
+
+  /** 사용자가 "새로고침"을 눌렀을 때 */
+  apply() {
+    if (!this.waiting) return false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // 이 이벤트는 여러 번 올 수 있습니다. 새로고침은 한 번만.
+      if (this._reloading) return;
+      this._reloading = true;
+      location.reload();
+    });
+    this.waiting.postMessage('SKIP_WAITING');
+    return true;
+  }
+};
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Router };
+  module.exports = { Router, SW };
 }

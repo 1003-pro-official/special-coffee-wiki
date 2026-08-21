@@ -68,6 +68,8 @@
   "gear.anchorEstimated.body": "We could not find a reliable source for this grinder, so the anchor is inferred from similar models. Brew once and adjust. Sour and watery means go one step finer; bitter and drying means one step coarser. Fix it here once and every recipe follows.",
   "gear.anchorCustom.title": "Grinder entered by hand",
   "gear.anchorCustom.body": "Without model data there is no reference point for the conversion. Enter the setting you normally use for V60. That value becomes the anchor everything else is calculated from.",
+  "update.ready": "A new version is ready",
+  "update.apply": "Reload",
   "settings.title": "Settings",
   "settings.myGear": "My gear",
   "settings.water": "Water",

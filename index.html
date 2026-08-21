@@ -10,6 +10,27 @@
 
 <title>Special Coffee Wiki</title>
 
+<!-- 홈 화면 설치.
+     단순한 편의 기능이 아닙니다. WebKit은 사이트와 상호작용 없이 7일이 지나면
+     localStorage를 삭제하는데, 홈 화면에 추가된 웹앱은 사파리와 별도로 취급되어
+     자체 사용일 카운터를 가집니다. 즉 설치가 곧 브루잉 기록의 보존 대책입니다. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coffee Wiki">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- 링크 미리보기 (카톡 · 슬랙 · 트위터) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Special Coffee Wiki">
+<meta property="og:title" content="Special Coffee Wiki">
+<meta property="og:description" content="브루잉 커피 학습 위키 — 내 장비 기준으로 변환된 레시피, 실시간 추출 가이드, 브루잉 기록">
+<meta property="og:image" content="https://1003-pro-official.github.io/special-coffee-wiki/assets/og-image.png">
+<meta property="og:url" content="https://1003-pro-official.github.io/special-coffee-wiki/">
+<meta name="twitter:card" content="summary">
+
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -23,6 +44,11 @@
     <div class="spinner" role="status" aria-label="Loading"></div>
   </div>
 </div>
+
+<!-- 새 버전 알림.
+     #root 바깥에 둡니다. 화면을 다시 그릴 때마다 사라졌다 나타나면
+     읽기도 전에 없어집니다. -->
+<div id="updateBar" hidden></div>
 
 <noscript>
   <div class="center">

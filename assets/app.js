@@ -125,8 +125,12 @@ const Data = {
   byId: { brewer: {}, grinder: {}, flavor: {}, recipe: {}, bean: {} },
 
   async loadAll(lang) {
+    /* cache 옵션을 주지 않습니다.
+       예전에는 'no-cache'로 매번 서버에 되물었는데, 서비스 워커가 캐시를
+       관리하게 된 지금은 그게 방해만 됩니다. 갱신은 서비스 워커가
+       응답을 준 뒤 뒤에서 조용히 처리합니다. */
     const get = async (path) => {
-      const res = await fetch(path, { cache: 'no-cache' });
+      const res = await fetch(path);
       if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
       return res.json();
     };
@@ -151,7 +155,7 @@ const Data = {
   },
 
   async loadDict(lang) {
-    const res = await fetch(`data/i18n/${lang}.json`, { cache: 'no-cache' });
+    const res = await fetch(`data/i18n/${lang}.json`);
     if (!res.ok) throw new Error(`i18n/${lang}.json → HTTP ${res.status}`);
     I18n.dict = await res.json();
   },
@@ -249,6 +253,31 @@ const App = {
       this.syncHash();
       this.render();
     }
+
+    /* 서비스 워커는 화면을 다 그린 뒤에 등록합니다.
+       첫 화면이 뜨는 걸 늦출 이유가 없습니다. */
+    SW.onUpdate = () => this.paintUpdateBar();
+    const bar = document.getElementById('updateBar');
+    if (bar) bar.addEventListener('click', (e) => {
+      if (e.target.closest('[data-act="update-apply"]')) SW.apply();
+    });
+    SW.register();
+  },
+
+  /* 새 버전 알림.
+     추출 중에는 띄우지 않습니다 — 3분짜리 타이머 옆에 "새로고침" 버튼을
+     두면 누르는 순간 기록이 날아갑니다. 끝나고 나면 자연히 보입니다. */
+  paintUpdateBar() {
+    const bar = document.getElementById('updateBar');
+    if (!bar) return;
+    const brewing = this.page === 'brew' && this.brew.session && !this.brew.session.finished;
+    if (!SW.waiting || brewing) { bar.hidden = true; bar.innerHTML = ''; return; }
+    bar.hidden = false;
+    bar.innerHTML = `
+      <div class="updatebar" role="status">
+        <span>${esc(t('update.ready'))}</span>
+        <button data-act="update-apply">${esc(t('update.apply'))}</button>
+      </div>`;
   },
 
   applyTheme() {
@@ -331,6 +360,9 @@ const App = {
     }
 
     if (this.page === 'brew' && this.brew.session) this.paintBrew(this.brew.session.state());
+
+    // 추출이 끝나 화면이 바뀌면 미뤄뒀던 업데이트 알림이 여기서 나타납니다
+    if (SW.waiting) this.paintUpdateBar();
   },
 
   /* ══════════ 라우팅 ══════════

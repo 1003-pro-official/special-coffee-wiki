@@ -193,6 +193,25 @@ a { color:var(--accent); }
 }
 .note__title { font-weight:600; color:var(--ink); margin-bottom:var(--s1); }
 
+/* ══════════ 새 버전 알림 ══════════
+   화면 맨 아래에 띄웁니다. 위쪽은 상단바가 있고, 손가락은 아래에 있습니다. */
+.updatebar {
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:calc(var(--s4) + env(safe-area-inset-bottom));
+  z-index:50; width:min(calc(100% - var(--s8)), 480px);
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+  padding:var(--s3) var(--s3) var(--s3) var(--s4);
+  border-radius:var(--radius);
+  background:var(--ink); color:var(--paper);
+  font-size:var(--f-label); line-height:1.4;
+  box-shadow:0 6px 24px rgb(0 0 0 / .18);
+}
+.updatebar button {
+  flex-shrink:0; min-height:36px; padding-inline:var(--s3);
+  border-radius:6px; font-size:var(--f-label); font-weight:600;
+  background:var(--paper); color:var(--ink);
+}
+
 /* 주의 변형 — 데이터가 추정치라 결과가 틀릴 수 있을 때.
    빨강(danger)이 아니라 주황(warn)입니다. 고장이 아니라 "확인이 필요함"이라서요. */
 .note--warn {

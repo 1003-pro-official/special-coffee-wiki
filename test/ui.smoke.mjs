@@ -6,7 +6,7 @@ globalThis.URL={createObjectURL:()=>'blob:x',revokeObjectURL(){}};
 globalThis.FileReader=class{readAsText(){}};
 globalThis.document={documentElement:{lang:'',setAttribute(){},removeAttribute(){}},
   createElement:()=>({href:'',download:'',click(){},remove(){},style:{}}), body:{appendChild(){}},
-  getElementById:()=>({innerHTML:'',textContent:'',scrollTop:0,style:{},
+  getElementById:(id)=>({id,innerHTML:'',textContent:'',scrollTop:0,style:{},hidden:false,
     classList:{toggle(){},add(){},remove(){}},addEventListener(){},removeEventListener(){},
     setAttribute(){},removeAttribute(){},dataset:{},focus(){},
     querySelector:()=>null, querySelectorAll:()=>[]}),
@@ -49,7 +49,7 @@ eval(strip(fs.readFileSync('assets/brew.js','utf-8'))+'\n;Object.assign(globalTh
 eval(strip(fs.readFileSync('assets/logs.js','utf-8'))+'\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(strip(fs.readFileSync('assets/flavor.js','utf-8'))+'\n;Object.assign(globalThis,{FlavorTree,Wheel});');
 eval(strip(fs.readFileSync('assets/analysis.js','utf-8'))+'\n;Object.assign(globalThis,{Extraction,Analysis,Chart});');
-eval(strip(fs.readFileSync('assets/router.js','utf-8'))+'\n;Object.assign(globalThis,{Router});');
+eval(strip(fs.readFileSync('assets/router.js','utf-8'))+'\n;Object.assign(globalThis,{Router,SW});');
 eval(fs.readFileSync('assets/app.js','utf-8').replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    +'\n;Object.assign(globalThis,{Store,I18n,Data,App,esc});');
 console.warn=_w;
