@@ -44,13 +44,13 @@ globalThis.FileReader = class { readAsText(){} };
 globalThis.fetch = async p => ({ ok:true, status:200, json: async()=>JSON.parse(fs.readFileSync(p,'utf-8')) });
 
 const strip = s => s.replace(/if \(typeof module[\s\S]*$/,'');
-for (const f of ['engine','brew','logs','flavor','analysis'])
-  eval(strip(fs.readFileSync(`assets/${f}.js`,'utf-8')));
+
 eval(strip(fs.readFileSync('assets/engine.js','utf-8')) + '\n;Object.assign(globalThis,{Grind,Score,Convert,Engine});');
 eval(strip(fs.readFileSync('assets/brew.js','utf-8')) + '\n;Object.assign(globalThis,{BrewPlan,Alerts,WakeLock,BrewSession});');
 eval(strip(fs.readFileSync('assets/logs.js','utf-8')) + '\n;Object.assign(globalThis,{LogEntry,LogStore});');
 eval(strip(fs.readFileSync('assets/flavor.js','utf-8')) + '\n;Object.assign(globalThis,{FlavorTree,Wheel});');
 eval(strip(fs.readFileSync('assets/analysis.js','utf-8')) + '\n;Object.assign(globalThis,{Extraction,Analysis,Chart});');
+eval(strip(fs.readFileSync('assets/icons.js','utf-8')) + '\n;Object.assign(globalThis,{BrewerIcon});');
 eval(fs.readFileSync('assets/app.js','utf-8')
       .replace("document.addEventListener('DOMContentLoaded', () => App.init());",'')
    + '\n;Object.assign(globalThis,{Store,I18n,Data,App});');

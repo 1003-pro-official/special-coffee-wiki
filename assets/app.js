@@ -387,10 +387,11 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       <p class="dim">${esc(t('onboard.q1.sub'))}</p>
       <div style="height:var(--s6)"></div>
       <div class="grid2">${list.map(b => `
-        <button class="card-select" data-act="pick-brewer" data-id="${b.id}"
+        <button class="card-select card-select--gear" data-act="pick-brewer" data-id="${b.id}"
                 aria-pressed="${this.settings.brewer_id === b.id}">
-          <div class="card-select__name">${esc(Data.brewerName(b))}</div>
-          <div class="card-select__meta">${esc(term('material', b.material))} · ${esc(term('geometry', b.geometry))}</div>
+          <span class="card-select__icon">${BrewerIcon.svg(b, 44, Data.brewerName(b))}</span>
+          <span class="card-select__name">${esc(Data.brewerName(b))}</span>
+          <span class="card-select__meta">${esc(term('material', b.material))} · ${esc(term('geometry', b.geometry))}</span>
           <span class="card-select__tag">${esc(b.preheat_required ? t('gear.preheatRequired') : term('flow_rate', b.flow_rate))}</span>
         </button>`).join('')}</div>
       <div style="height:var(--s4)"></div>
@@ -505,7 +506,9 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
     const gname = g?.id === 'custom' ? (this.settings.grinder_custom_name || g.name) : (g?.name || '—');
     return `
       <div class="row"><span class="row__label">${esc(t('gear.dripper'))}</span>
-        <span class="row__value">${esc(Data.brewerName(b))}</span></div>
+        <span class="row__value row__value--icon">
+          ${BrewerIcon.svg(b, 22, '')}${esc(Data.brewerName(b))}
+        </span></div>
       <div class="row"><span class="row__label">${esc(t('gear.grinder'))}</span>
         <span class="row__value">${esc(gname)}</span></div>
       <div class="row"><span class="row__label">${esc(t('gear.anchor'))}</span>
@@ -1725,6 +1728,8 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
 
     return `<button class="ar" data-act="ar-open" data-id="${esc(r.id)}">
       <span class="ar__head">
+        <span style="display:flex;gap:var(--s3);min-width:0;align-items:flex-start">
+        <span style="color:var(--ink-3);flex-shrink:0;padding-top:2px">${BrewerIcon.svg(b, 28, '')}</span>
         <span style="min-width:0">
           <span class="ar__name">${esc(Data.recipeTitle(r))}</span>
           <span class="ar__meta">${esc(meta)}</span>
@@ -1734,7 +1739,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
             ${a.country ? `<span class="tag">${esc(a.country)}</span>` : ''}
             ${r.verified ? '' : `<span class="tag">${esc(t('ar.unverified'))}</span>`}
           </span>
-        </span>
+        </span></span>
         ${a.year ? `<span class="ar__year">${a.year}</span>` : ''}
       </span>
     </button>`;
