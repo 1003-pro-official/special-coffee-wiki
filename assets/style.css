@@ -150,6 +150,12 @@ a { color:var(--accent); }
 .card-select[aria-pressed="true"] .card-select__tag {
   background:var(--paper); border-color:var(--accent); color:var(--accent);
 }
+/* 앵커가 추정치인 그라인더. 선택 여부와 무관하게 항상 주황이어야
+   "고르기 전에" 알아차립니다 — 그래서 선택 상태 규칙보다 뒤에 둡니다. */
+.card-select .card-select__tag--warn,
+.card-select[aria-pressed="true"] .card-select__tag--warn {
+  border-color:var(--warn); color:var(--warn); background:transparent;
+}
 
 /* ══════════ MetricCard ══════════ */
 .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); }
@@ -186,6 +192,15 @@ a { color:var(--accent); }
   color:var(--ink-2); line-height:1.6;
 }
 .note__title { font-weight:600; color:var(--ink); margin-bottom:var(--s1); }
+
+/* 주의 변형 — 데이터가 추정치라 결과가 틀릴 수 있을 때.
+   빨강(danger)이 아니라 주황(warn)입니다. 고장이 아니라 "확인이 필요함"이라서요. */
+.note--warn {
+  background:transparent;
+  border:1px solid var(--warn);
+  border-left-width:3px;
+}
+.note--warn .note__title { color:var(--warn); }
 
 .fallback {
   background:var(--surface); border-left:2px solid var(--line-strong);

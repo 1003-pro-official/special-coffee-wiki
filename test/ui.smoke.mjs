@@ -402,5 +402,64 @@ console.log('\n[영어 — 로그 화면]');
   await Data.loadDict('ko'); I18n.setLang('ko');
 }
 
+console.log('\n[앵커 신뢰도 경고]');
+{
+  const byConf = {};
+  for (const g of Data.grinders) (byConf[g.confidence] ??= []).push(g);
+  ok((byConf.low||[]).length>0, `confidence:low 그라인더 ${(byConf.low||[]).length}종 존재 — 경고 대상이 있음`);
+
+  // 판정
+  ok(App.anchorIsEstimated(byConf.low[0]), 'low는 추정으로 판정');
+  ok(App.anchorIsEstimated(Data.byId.grinder['custom']), '직접 입력(n/a)도 추정으로 판정');
+  ok(!App.anchorIsEstimated((byConf.high||byConf.medium)[0]), 'high/medium은 추정 아님');
+  ok(!App.anchorIsEstimated(null), 'null이어도 예외 없이 false');
+
+  // 안내 박스
+  const wLow = App.anchorWarning(byConf.low[0]);
+  ok(wLow.includes('note--warn'), 'low → 주의 스타일 박스가 나옴');
+  ok(wLow.length>80, `안내문에 실제 내용이 있음 (${wLow.length}자)`);
+  ok(!wLow.includes('undefined') && !/gear\.anchor/.test(wLow), '안내문 i18n 키가 실제 문구로 치환됨');
+  ok(App.anchorWarning((byConf.high||byConf.medium)[0])==='', 'high/medium → 박스 없음');
+  ok(App.anchorWarning(null)==='', 'null → 박스 없음');
+
+  const wCustom = App.anchorWarning(Data.byId.grinder['custom']);
+  ok(wCustom!==wLow && wCustom.includes('note--warn'), '직접 입력은 다른 안내문 사용');
+
+  // 선택 화면 — 태그에 경고색이 붙는가
+  App.settings.onboarded=false; App.onboardStep=2; App.showAllGrinders=true;
+  const gh = App.stepGrinder();
+  ok(gh.includes('card-select__tag--warn'), '그라인더 목록에서 추정 기종에 경고 태그');
+  const warnTags=(gh.match(/card-select__tag--warn/g)||[]).length;
+  const listed=Data.grinders.filter(g=>g.id!=='custom');
+  const expect=listed.filter(g=>App.anchorIsEstimated(g)).length;
+  ok(warnTags===expect, `경고 태그 수가 추정 기종 수와 일치 (${warnTags}/${expect})`);
+
+  // 앵커 조정 화면 — 고르고 나면 안내가 뜨는가
+  App.settings.grinder_id=byConf.low[0].id;
+  App.settings.grind_anchor=byConf.low[0].pour_over_anchor.setting;
+  const ah = App.stepAnchor();
+  ok(ah.includes('note--warn'), '추정 기종을 고르면 앵커 화면에 안내가 뜸');
+
+  const hi=(byConf.high||byConf.medium)[0];
+  App.settings.grinder_id=hi.id; App.settings.grind_anchor=hi.pour_over_anchor.setting;
+  ok(!App.stepAnchor().includes('note--warn'), '신뢰도 있는 기종은 안내 없음');
+
+  // 온보딩이 끝난 뒤에도 잊지 않도록 요약에 표시
+  App.settings.grinder_id=byConf.low[0].id;
+  App.settings.grind_anchor=byConf.low[0].pour_over_anchor.setting;
+  ok(App.gearSummary().includes('--warn'), '내 장비 요약에도 추정 표시');
+  App.settings.grinder_id=hi.id; App.settings.grind_anchor=hi.pour_over_anchor.setting;
+  ok(!App.gearSummary().includes('--warn'), '신뢰도 있는 기종은 요약에 표시 없음');
+
+  // 영어에서도 문구가 나오는가
+  await Data.loadDict('en'); I18n.setLang('en');
+  const en=App.anchorWarning(byConf.low[0]);
+  ok(en.length>80 && !/[가-힣]/.test(en), '영어 안내문에 한글이 섞이지 않음');
+  await Data.loadDict('ko'); I18n.setLang('ko');
+
+  App.settings.onboarded=true;
+  App.settings.grinder_id='timemore-chestnut-c3'; App.settings.grind_anchor=20;
+}
+
 console.log(fail?`\n★ 실패 ${fail}/${n}`:`\n전체 통과 ${n}건`);
 process.exit(fail?1:0);

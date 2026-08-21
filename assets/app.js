@@ -399,6 +399,28 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       </button>`;
   },
 
+  /* ── 앵커 신뢰도 ──
+     그라인더 21종 중 앵커 출처가 확실한 건 2종뿐입니다. 나머지는 통설이거나
+     추정입니다. 앵커가 2클릭만 틀려도 추천 분쇄도가 통째로 틀리고,
+     사용자는 "이 앱 추천이 이상하다"고 느낍니다. 그게 맞는 판단이고요.
+
+     그래서 틀릴 수 있다는 걸 **고르기 전에** 알립니다. 숨기면 앱을 못 믿게 되고,
+     미리 말하면 "첫 잔 내려보고 맞추면 되겠다"가 됩니다. */
+  anchorIsEstimated(g) {
+    return !!g && (g.confidence === 'low' || g.confidence === 'n/a');
+  },
+
+  /** 앵커 추정 안내 박스. 해당 없으면 빈 문자열 — 호출부에서 조건문이 필요 없게. */
+  anchorWarning(g) {
+    if (!this.anchorIsEstimated(g)) return '';
+    const custom = g.id === 'custom';
+    return `
+      <div class="note note--warn">
+        <div class="note__title">${esc(t(custom ? 'gear.anchorCustom.title' : 'gear.anchorEstimated.title'))}</div>
+        ${esc(t(custom ? 'gear.anchorCustom.body' : 'gear.anchorEstimated.body'))}
+      </div>`;
+  },
+
   stepGrinder() {
     const list = this.showAllGrinders ? Data.grinders.filter(g => g.id !== 'custom') : Data.popularGrinders();
     const isCustom = this.settings.grinder_id === 'custom';
@@ -413,7 +435,8 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
           <div class="card-select__name">${esc(g.name)}</div>
           <div class="card-select__meta">${esc(term('grinder_type', g.type))} · ${esc(t('gear.burr', {
             shape: term('burr_shape', g.burr.shape), size: g.burr.size_mm ?? '?' }))}</div>
-          <span class="card-select__tag">${esc(term('confidence', g.confidence))}</span>
+          <span class="card-select__tag${this.anchorIsEstimated(g) ? ' card-select__tag--warn' : ''}"
+                >${esc(term('confidence', g.confidence))}</span>
         </button>`).join('')}</div>
       <div style="height:var(--s4)"></div>
       <button class="btn btn--secondary" data-act="toggle-grinders">
@@ -447,11 +470,14 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       </div>`;
     }).join('');
 
+    const warn = this.anchorWarning(g);
+
     return `
       <h1 class="title">${esc(t('onboard.q3.title'))}</h1>
       <div style="height:var(--s2)"></div>
       <p class="dim">${esc(t('onboard.q3.sub'))}</p>
       <div style="height:var(--s6)"></div>
+      ${warn ? warn + '<div style="height:var(--s6)"></div>' : ''}
       <div class="caption">${esc(t('onboard.q3.anchorLabel'))}${
         g && g.id !== 'custom' ? ` · ${esc(g.name)}` : ''}</div>
       <div style="height:var(--s2)"></div>
@@ -509,7 +535,9 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
       <div class="row"><span class="row__label">${esc(t('gear.grinder'))}</span>
         <span class="row__value">${esc(gname)}</span></div>
       <div class="row"><span class="row__label">${esc(t('gear.anchor'))}</span>
-        <span class="row__value">${esc(f.text)}</span></div>`;
+        <span class="row__value">${esc(f.text)}${this.anchorIsEstimated(g)
+          ? ` <span style="color:var(--warn);font-weight:600">${esc(t('gear.estimatedMark'))}</span>` : ''
+        }</span></div>`;
   },
 
   langSeg() {
@@ -992,22 +1020,39 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
     if (pause) pause.textContent = s.paused ? t('brew.resume') : t('brew.pause');
   },
 
+  /** 화면 꺼짐 방지 버튼을 현재 상태에 맞춥니다.
+      전체 render()를 부르지 않습니다 — 추출 중에 화면을 통째로 다시 그리면
+      스크롤과 애니메이션이 튑니다. */
+  paintWakeButton() {
+    const b = this.brew;
+    const wb = document.querySelector('[data-act="brew-wake"]');
+    if (!wb) return;
+    wb.setAttribute('aria-pressed', String(b.wake));
+    wb.textContent = `${b.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
+    if (b.wakeFailed) wb.setAttribute('disabled', '');
+    else wb.removeAttribute('disabled');
+  },
+
   async beginTimer() {
     const b = this.brew;
     Alerts.enabled = b.sound;
     b.session = new BrewSession(b.plan, (s) => this.paintBrew(s));
     this.page = 'brew';
     this.render();
+
+    /* 백그라운드에 갔다 돌아오면 브라우저가 잠금을 풀어둡니다.
+       WakeLock이 알아서 다시 잡되, 성공 여부를 버튼에 반영해야
+       사용자가 지금 화면이 꺼지는 상태인지 알 수 있습니다. */
+    WakeLock.onChange = (ok) => {
+      b.wake = ok;
+      b.wakeFailed = !ok;
+      this.paintWakeButton();
+    };
+
     b.wake = await WakeLock.acquire();
     b.wakeFailed = !b.wake;
     b.session.start();
-    // Wake Lock 결과를 버튼에 반영
-    const wb = document.querySelector('[data-act="brew-wake"]');
-    if (wb) {
-      wb.setAttribute('aria-pressed', String(b.wake));
-      wb.textContent = `${b.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
-      if (b.wakeFailed) wb.setAttribute('disabled', '');
-    }
+    this.paintWakeButton();
   },
 
   finishBrew() {
@@ -2201,8 +2246,7 @@ npx serve .</pre>` : `<p class="dim">${esc(String(err?.message || err))}</p>`}
         case 'brew-wake': {
           if (this.brew.wake) { WakeLock.release(); this.brew.wake = false; }
           else { this.brew.wake = await WakeLock.acquire(); this.brew.wakeFailed = !this.brew.wake; }
-          el.setAttribute('aria-pressed', String(this.brew.wake));
-          el.textContent = `${this.brew.wake ? '🔒' : '🔓'} ${t('brew.keepOn')}`;
+          this.paintWakeButton();
           break;
         }
         case 'brew-again':  this.resetTasting(); this.openBrew(this.brew.result.recipe.id); break;

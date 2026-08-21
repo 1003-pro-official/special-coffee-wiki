@@ -165,25 +165,70 @@ const Alerts = {
 
 /* ══════════════════════════════════════════════════════════
    WakeLock — 추출 3분 동안 화면이 꺼지면 안 됩니다
+
+   여기서 반드시 알아야 할 브라우저 동작이 하나 있습니다.
+
+     탭이 백그라운드로 가면 브라우저가 화면 잠금을 자동으로 해제합니다.
+     그리고 다시 돌아와도 **스스로 복구되지 않습니다.**
+
+   즉 추출 도중에 알림 하나 확인하고 돌아오면, 타이머는 멀쩡히 돌지만
+   화면 꺼짐 방지는 풀려 있습니다. 잠시 뒤 화면이 꺼지고 다음 푸어 타이밍을
+   놓칩니다. 실제로 가장 자주 겪게 될 사고입니다.
+
+   그래서 "지금 잠금을 원하는 상태인가"(wanted)를 따로 들고 있다가
+   visibilitychange에서 다시 요청합니다. 요청은 문서가 보이는 상태에서만
+   허용되므로 visible로 돌아온 시점이 유일하게 가능한 타이밍입니다.
    ══════════════════════════════════════════════════════════ */
 const WakeLock = {
   lock: null,
+  wanted: false,      // 사용자가 켜둔 상태인가 (추출 중인가)
+  onChange: null,     // 재획득 결과를 화면에 반영하기 위한 콜백
+  _bound: false,
+
+  supported() {
+    return typeof navigator !== 'undefined' && 'wakeLock' in navigator;
+  },
 
   async acquire() {
-    try {
-      if ('wakeLock' in navigator) {
-        this.lock = await navigator.wakeLock.request('screen');
-        // 탭을 벗어났다 돌아오면 해제되므로 다시 잡습니다
-        this.lock.addEventListener?.('release', () => { this.lock = null; });
-        return true;
-      }
-    } catch (e) { /* 사용자가 거부했거나 미지원 */ }
-    return false;
+    this.wanted = true;
+    this._bind();
+    return this._request();
   },
 
   async release() {
+    this.wanted = false;
     try { await this.lock?.release?.(); } catch (e) { /* noop */ }
     this.lock = null;
+  },
+
+  async _request() {
+    if (!this.supported()) return false;
+    if (this.lock) return true;
+    try {
+      this.lock = await navigator.wakeLock.request('screen');
+      // 해제는 브라우저가 임의로 할 수 있습니다. 상태만 비워둡니다.
+      this.lock.addEventListener?.('release', () => { this.lock = null; });
+      return true;
+    } catch (e) {
+      // 사용자가 거부했거나, 배터리 절약 모드거나, 문서가 숨겨진 상태
+      return false;
+    }
+  },
+
+  /** visibilitychange 리스너는 한 번만 겁니다.
+      acquire()가 여러 번 호출돼도 리스너가 쌓이면 안 됩니다. */
+  _bind() {
+    if (this._bound || typeof document === 'undefined') return;
+    this._bound = true;
+    document.addEventListener('visibilitychange', () => this._onVisible());
+  },
+
+  async _onVisible() {
+    if (!this.wanted) return;                          // 추출 중이 아니면 관심 없음
+    if (this.lock) return;                             // 아직 살아 있으면 그대로
+    if (document.visibilityState !== 'visible') return;
+    const ok = await this._request();
+    this.onChange?.(ok);
   },
 
   get active() { return !!this.lock; }
